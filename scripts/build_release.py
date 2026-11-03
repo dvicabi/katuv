@@ -20,7 +20,7 @@ def build(output=None, *, exe=False, iscc=None, signed=False):
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     dirty = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip())
     if signed and (dirty or not os.environ.get('KATUV_SIGN_CERT_SHA1')):
-        raise ValueError('Signed releases require a clean checkout and KATUV_SIGN_CERT_SHA1. Unsigned builds are internal candidates only.')
+        raise ValueError('Signed releases require a clean checkout and KATUV_SIGN_CERT_SHA1. Unsigned publication uses the explicit release verification gate.')
     if exe:
         iscc = iscc or os.environ.get('KATUV_ISCC') or shutil.which('ISCC.exe')
         if not iscc:

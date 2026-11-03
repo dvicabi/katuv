@@ -152,3 +152,27 @@ def test_public_release_gate_rejects_unsigned_candidates(tmp_path):
         '-PublisherThumbprint', 'a'*40)
     assert result.returncode != 0
     assert 'unsigned' in (result.stdout + result.stderr).lower()
+
+
+def test_preview_gate_requires_explicit_unsigned_mode(tmp_path):
+    result = powershell(ROOT/'scripts/verify_public_release.ps1', '-Installer', tmp_path/'candidate.exe',
+        '-Bundle', tmp_path/'candidate.zip', '-Preview')
+    assert result.returncode != 0
+    assert 'explicit -Unsigned' in result.stderr
+
+
+def test_unsigned_stable_release_still_requires_acceptance(tmp_path):
+    result = powershell(ROOT/'scripts/verify_public_release.ps1', '-Installer', tmp_path/'UNSIGNED.exe',
+        '-Bundle', tmp_path/'UNSIGNED.zip', '-Unsigned')
+    assert result.returncode != 0
+    assert 'another computer' in result.stderr
+
+
+def test_preview_gate_rejects_changed_installer_before_signature_check(tmp_path):
+    installer = tmp_path/'Katuv-1.3.0-Windows-UNSIGNED.exe'
+    installer.write_bytes(b'changed after testing')
+    installer.with_suffix('.exe.sha256').write_text('0'*64 + '  ' + installer.name + '\n')
+    result = powershell(ROOT/'scripts/verify_public_release.ps1', '-Installer', installer,
+        '-Bundle', tmp_path/'UNSIGNED.zip', '-Unsigned', '-Preview', '-ExpectedCommit', 'a'*40)
+    assert result.returncode != 0
+    assert 'SHA-256 or filename mismatch' in result.stderr

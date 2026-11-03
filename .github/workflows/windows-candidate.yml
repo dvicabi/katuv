@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_preview:
+        description: Publish the tested unsigned installer as a prerelease
+        type: boolean
+        default: false
 permissions:
   contents: read
 env:
@@ -43,9 +48,46 @@ jobs:
           $p = Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER',('/DIR="' + $compiler + '"')) -WindowStyle Hidden -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw 'Compiler installation failed' }
           "KATUV_ISCC=$compiler\ISCC.exe" | Out-File $env:GITHUB_ENV -Append
-      - name: Build and audit internal candidate
+      - name: Build and audit candidate
         run: python scripts/build_release.py --exe
       - name: Exercise compiled installer and uninstaller
         shell: pwsh
         run: scripts/smoke_windows_installer.ps1 -Installer (Resolve-Path dist/Katuv-1.3.0-Windows-UNSIGNED.exe)
-      # Deliberately no upload-artifact or release step: unsigned installers stay on this disposable runner.
+      - name: Verify unsigned preview provenance and checksums
+        shell: pwsh
+        run: scripts/verify_public_release.ps1 -Installer dist/Katuv-1.3.0-Windows-UNSIGNED.exe -Bundle dist/Katuv-1.3.0-Windows-UNSIGNED.zip -Unsigned -Preview -ExpectedCommit $env:GITHUB_SHA
+      - name: Save only tested public assets
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_preview && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-preview
+          path: |
+            dist/Katuv-1.3.0-Windows-UNSIGNED.exe
+            dist/Katuv-1.3.0-Windows-UNSIGNED.exe.sha256
+          if-no-files-found: error
+          retention-days: 7
+  publish-preview:
+    needs: candidate
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_preview && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-preview
+          path: dist
+      - name: Verify the downloaded installer
+        working-directory: dist
+        run: sha256sum --check Katuv-1.3.0-Windows-UNSIGNED.exe.sha256
+      - name: Publish an explicitly unsigned prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v1.3.0-preview.${GITHUB_RUN_NUMBER}" \
+            dist/Katuv-1.3.0-Windows-UNSIGNED.exe \
+            dist/Katuv-1.3.0-Windows-UNSIGNED.exe.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "כתוב 1.3.0 — גרסת ניסיון ללא חתימה" \
+            --notes-file docs/unsigned-release-notes.md --prerelease --latest=false
