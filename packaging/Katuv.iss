@@ -108,13 +108,28 @@ begin
   end;
 end;
 
-function InitializeUninstall: Boolean;
+function RunUninstallHelper(const CheckOnly: Boolean): Boolean;
 var
   ExitCode: Integer;
+  Params: String;
 begin
+  Params := '-NoProfile -ExecutionPolicy RemoteSigned -File "' + ExpandConstant('{app}\Uninstall-Katuv.ps1') + '"';
+  if CheckOnly then Params := Params + ' -CheckOnly';
   Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
-    '-NoProfile -ExecutionPolicy RemoteSigned -File "' + ExpandConstant('{app}\Uninstall-Katuv.ps1') + '"',
-    '', SW_HIDE, ewWaitUntilTerminated, ExitCode) and (ExitCode = 0);
+    Params, '', SW_HIDE, ewWaitUntilTerminated, ExitCode) and (ExitCode = 0);
   if not Result then
     MsgBox('לא ניתן להסיר כעת. המתינו לסיום עיבוד סרטון או הכנת מודלים, וסגרו מתקינים פתוחים. הפרויקטים נשמרו.', mbError, MB_OK);
+end;
+
+function InitializeUninstall: Boolean;
+begin
+  { Initial checks must not remove anything before the confirmation dialog. }
+  Result := RunUninstallHelper(True);
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  { Recheck and remove only after the user confirms; Abort prevents registry/file cleanup on failure. }
+  if CurUninstallStep = usUninstall then
+    if not RunUninstallHelper(False) then Abort;
 end;

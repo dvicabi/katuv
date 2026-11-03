@@ -45,4 +45,7 @@ jobs:
           "KATUV_ISCC=$compiler\ISCC.exe" | Out-File $env:GITHUB_ENV -Append
       - name: Build and audit internal candidate
         run: python scripts/build_release.py --exe
+      - name: Exercise compiled installer and uninstaller
+        shell: pwsh
+        run: scripts/smoke_windows_installer.ps1 -Installer (Resolve-Path dist/Katuv-1.3.0-Windows-UNSIGNED.exe)
       # Deliberately no upload-artifact or release step: unsigned installers stay on this disposable runner.
