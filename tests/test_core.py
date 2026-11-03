@@ -106,9 +106,9 @@ def test_settings_to_flags_and_style():
     assert "--model" not in flags  # "auto" model label means no flag
     assert "--nvenc" not in flags and "--no-burn" not in flags
 
-    flags = settings_to_flags(dict(DEFAULT_SETTINGS, burn=False, nvenc=True, model_label="small.en - balanced"))
+    flags = settings_to_flags(dict(DEFAULT_SETTINGS, burn=False, nvenc=True, model_label="small - balanced"))
     assert "--no-burn" in flags and "--nvenc" in flags
-    assert flags[flags.index("--model") + 1] == "small.en"
+    assert flags[flags.index("--model") + 1] == "small"
 
     style = settings_to_style(dict(DEFAULT_SETTINGS, highlight_color="#00FF88", style="karaoke"))
     assert style.mode == "karaoke" and style.highlight_color == "#00FF88"

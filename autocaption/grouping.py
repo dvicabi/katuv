@@ -12,6 +12,7 @@ SENTENCE_END = ".!?…"
 @dataclass
 class CaptionLine:
     words: list[Word]
+    block: bool = False  # Whole manually timed passage, with explicit line breaks.
 
     @property
     def start(self) -> float:
@@ -31,23 +32,27 @@ def group_words(
     max_words: int = 4,
     max_chars: int = 18,
     gap_break: float = 0.6,
+    snap_gaps: bool = True,
+    fixed_count: bool = False,
 ) -> list[CaptionLine]:
+    if max_words < 1 or max_chars < 1:
+        raise ValueError("Caption line limits must be positive.")
     lines: list[CaptionLine] = []
     current: list[Word] = []
 
     def flush() -> None:
         if current:
-            lines.append(CaptionLine(_snap_gaps(current.copy())))
+            lines.append(CaptionLine(_snap_gaps(current.copy()) if snap_gaps else current.copy()))
             current.clear()
 
     for word in words:
         if current:
             line_chars = sum(len(w.text) for w in current) + len(current) - 1
             if (
-                word.start - current[-1].end > gap_break
-                or len(current) >= max_words
-                or line_chars + 1 + len(word.text) > max_chars
-                or current[-1].text[-1] in SENTENCE_END
+                len(current) >= max_words
+                or (not fixed_count and (word.start - current[-1].end > gap_break
+                    or line_chars + 1 + len(word.text) > max_chars
+                    or current[-1].text[-1] in SENTENCE_END))
             ):
                 flush()
         current.append(word)

@@ -1,158 +1,61 @@
-# auto-caption
+# כתוב · סטודיו מקומי לכתוביות בעברית
 
-**Free, local, CapCut-style karaoke captions for shorts & reels.** No
-subscriptions, no watermarks, no uploads — everything runs on your machine.
+כתוב היא אפליקציית מחשב חינמית וקוד פתוח, המבוססת על [auto-caption](https://github.com/sebetancurch/auto-caption) מאת Sergio Betancur Chaves. הסרטונים, התמלילים והעיבוד נשארים במחשב. אין סימן מים או מנוי לשירות עיבוד.
 
-[![CI](https://github.com/sebetancurch/auto-caption/actions/workflows/ci.yml/badge.svg)](https://github.com/sebetancurch/auto-caption/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+הרחבת העברית והפצת Windows מתוחזקות בידי Dvir Cabessa ([dvicabi](https://github.com/dvicabi)). היסטוריית הפרויקט וקרדיט המחבר המקורי נשמרים.
 
-![Karaoke caption demo — pop style (left) and karaoke style (right)](docs/demo.gif)
+**מצב גרסה 1.3.0: הכנה להפצה.** קוד המקור זמין לפיתוח ולבדיקה. המתקין הציבורי יפורסם ב־[Releases](https://github.com/dvicabi/katuv/releases) רק לאחר חתימה דיגיטלית ובדיקת המתקין החתום במחשב נוסף. קבצים ששמם כולל `UNSIGNED` הם תוצרי בדיקה בלבד ואינם מיועדים להפצה.
 
-Feed it a video (or audio) file and it:
+## מה אפשר לעשות
 
-1. **Transcribes** the speech locally with word-level timestamps
-   ([faster-whisper](https://github.com/SYSTRAN/faster-whisper))
-2. **Groups** the words into short caption lines tuned for 9:16 vertical video
-3. **Generates** an `.ass` subtitle file with per-word karaoke animations
-4. **Burns** the captions into the video with FFmpeg — and always saves the
-   subtitle files too, in case you'd rather finish in an editor
+- להעלות MP4 עד 2 GB, להדביק תמליל עברי או לטעון TXT. התמליל הוא המקור היחיד למילים המוצגות, כולל פיסוק ומספרים.
+- לבחור במפורש זיהוי דיבור כשאין תמליל, עם מודל עברי או רב־לשוני מקומי ובחירה אוטומטית לפי משאבי המחשב.
+- לערוך תזמון מילים ובתים/פזמונים בציר הזמן, לפצל ולחבר קטעים, ולבטל ולבצע מחדש עריכות.
+- לעצב כתוביות RTL, טקסט מעורב עברית/אנגלית/מספרים, צבע, גודל, מיקום ואנימציות Pop, Karaoke, Zoom ו־Float.
+- לייצא MP4 ברזולוציית המקור, 720p, 1080p, 1440p או 4K, עם יחס התמונה והאודיו המקורי.
 
-```text
-autocaption clip.mp4
-   → clip.captioned.mp4   final video with animated captions
-   → clip.ass             the animated subtitles (mpv, VLC, DaVinci, re-burnable)
-   → clip.davinci.srt     karaoke SRT for DaVinci Resolve's subtitle track
-```
+תזמון אוטומטי הוא אומדן, במיוחד בשירה. תמיכת מודלים אינה אישור מהאזנה אנושית; מילים לא ודאיות נשמרות ואינן מחייבות אישור פרטני כדי לייצא.
 
-## Quick start (no coding needed)
+## התקנה ושימוש
 
-1. **Install two things** (one time):
-   [Python 3.10+](https://www.python.org/downloads/) — on Windows, tick
-   **"Add python.exe to PATH"** in the installer — and FFmpeg
-   (`winget install Gyan.FFmpeg` / `brew install ffmpeg` / `sudo apt install ffmpeg`)
-2. **[Download the ZIP](https://github.com/sebetancurch/auto-caption/archive/refs/heads/main.zip)**
-   of this project and unzip it anywhere
-3. **Open the app:**
-   - **Windows** — double-click **`AutoCaption.bat`**
-   - **macOS** — right-click **`AutoCaption.command`** → Open (only the first
-     time; double-click after that)
-   - **Linux** — `bash AutoCaption.command`
+היעד להפצה הוא **Windows 10/11, מעבד Intel/AMD של 64 סיביות**. המתקין מיועד לחשבון משתמש רגיל ואינו דורש Python מותקן. נדרשים אינטרנט ולפחות 10 GB פנויים להתקנה; המודלים וסרטוני המשתמש דורשים מקום נוסף.
 
-The first launch installs everything automatically (a few minutes); every
-launch after that is instant. Then just drop a video in, pick a style, and hit
-**Generate**. The first transcription downloads a Whisper model (~500 MB, one
-time) — after that everything works offline.
+1. לאחר פרסום הגרסה החתומה, הורידו את המתקין מה־[Releases הרשמיים](https://github.com/dvicabi/katuv/releases).
+2. הפעילו את אשף ההתקנה בעברית ופתחו את קיצור הדרך **כתוב**.
+3. בחרו **הכנת המחשב** להורדת המודלים. סרטון הדוגמה המוכן מאפשר לבדוק עיצוב וייצוא גם לפני הורדת מודל.
+4. בחרו סרטון, הוסיפו טקסט, צרו כתוביות, בדקו בניגון ובחרו רזולוציה לפני הייצוא.
 
-## Install for developers (CLI)
+היישום נפתח בדפדפן בכתובת מקומית בלבד. עדכון נעשה בהפעלת המתקין החדש: הסביבה הקודמת נשמרת עד לבדיקת החדשה. עדכון והסרה נחסמים בזמן עיבוד או הכנת מודלים. הפרויקטים נשמרים ב־`%LOCALAPPDATA%\Katuv\projects` ונשמרים גם בהסרה.
 
-```bash
-git clone https://github.com/sebetancurch/auto-caption
-cd auto-caption
+לאחר ההכנה אפשר לעבוד ללא אינטרנט עם הרכיבים שכבר הותקנו. בחירת מודל נוסף וניתוח שירה מתקדם עשויים לדרוש הורדה נוספת. MMS האופציונלי אינו נכלל בהורדה הרגילה ודורש בחירה מפורשת לשימוש לא מסחרי, גם אם המשקלים כבר קיימים במטמון. ניתן לבטל את הבחירה במסך ההכנה. ראו [רכיבים ורישיונות](THIRD_PARTY.md).
+
+מדריכים: [התחלה](packaging/START-HERE.html), [התקנה, תחזוקה והפצה](docs/distribution.md), [הערות גרסה](CHANGELOG.md), [חתימת קוד](docs/code-signing.md).
+
+## פיתוח ובדיקות
+
+Python 3.11 מומלץ; FFmpeg צריך לכלול libass. ב־Windows:
+
+```powershell
 python -m venv .venv
-# Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
-pip install -e .
+.venv\Scripts\python.exe -m pip install -e .[dev,precision]
+.venv\Scripts\python.exe -m autocaption.bootstrap --prepare
+.venv\Scripts\python.exe -m autocaption.web --open
+.venv\Scripts\python.exe -m pytest -q
 ```
 
-## The GUI
+בדיקות עם מודלים אמיתיים מופעלות בנפרד ועשויות להוריד כמה GB:
 
-![Auto-Caption GUI](docs/gui.png)
-
-| Platform | Launch |
-|----------|--------|
-| Windows  | double-click **`AutoCaption.bat`** (installs itself the first time) |
-| macOS    | double-click **`AutoCaption.command`** (first time: right-click → Open) |
-| Linux    | `bash AutoCaption.command` |
-| Any (dev install) | `autocaption-gui` or `python -m autocaption.gui` |
-
-- **Drag & drop** one or more video/audio files — they queue up and process
-  one after another
-- Pick **style, position, font (all your installed fonts), highlight color,
-  Whisper model, language, font size and words per line** from dropdowns
-- **Preview style** renders a sample caption frame with your current settings
-  before you process anything
-- Live log, **cancel** mid-run, **open output folder** on the result
-- Settings are remembered between launches
-
-## The CLI
-
-```bash
-autocaption clip.mp4                              # default "pop" style
-autocaption clip.mp4 --style karaoke
-autocaption clip.mp4 --highlight-color 00FF88 --position mid --nvenc
-autocaption podcast.mp3                           # audio → subtitle files only
+```powershell
+.venv\Scripts\python.exe -m pytest tests/test_model_integration.py --run-model --run-hebrew-models -q
+.venv\Scripts\python.exe scripts/build_release.py --exe --iscc "C:\Program Files\Inno Setup 7\ISCC.exe"
 ```
 
-| Flag | Meaning (default) |
-|------|-------------------|
-| `--style pop\|karaoke` | caption style (`pop`) |
-| `--model NAME` | whisper model (auto: `medium.en` on GPU, `small.en` on CPU) |
-| `--device auto\|cuda\|cpu` | inference device (`auto`, safe CPU fallback) |
-| `--language XX` | audio language, `auto` to detect (`en`) |
-| `--highlight-color HEX` | active-word color (`#FFD700`) |
-| `--font NAME` | font (bundled **Anton**; any installed font works) |
-| `--font-size N` | size at 1080×1920 reference scale (`130`) |
-| `--caps / --no-caps` | UPPERCASE captions (on) |
-| `--words-per-line N` / `--max-chars N` | line length limits (`4` / `18`) |
-| `--position high\|mid\|low` | vertical placement (`low` ≈ 68% down, clear of TikTok UI) |
-| `--no-burn` | only write subtitle files |
-| `--no-srt` | skip the DaVinci `.srt` |
-| `--nvenc` | encode with NVIDIA NVENC (much faster export) |
-| `-o PATH` | output video path (`<input>.captioned.mp4`) |
+בנייה רגילה מייצרת מועמד לא חתום בלבד. בנייה חתומה דורשת checkout נקי ותעודה מאומתת; ההוראות ב־[מדריך החתימה](docs/code-signing.md). בדיקות CI מבצעות בנייה אך אינן מפרסמות מתקינים לא חתומים.
 
-## Styles
+אפשר לבודד נתונים באמצעות `AUTOCAPTION_HOME` ו־`AUTOCAPTION_DATA_DIR`. פרויקטי פיתוח קיימים ב־`.autocaption-web` נשארים תואמים. macOS/Linux נשארים מסלול מפתחים בלבד.
 
-| `pop` (default) | `karaoke` |
-|---|---|
-| ![pop style](docs/style-pop.png) | ![karaoke style](docs/style-karaoke.png) |
-| The spoken word flashes the highlight color and does a quick scale "pop" — the classic CapCut/TikTok look | The highlight sweeps smoothly *through* each word as it's spoken, karaoke-lyrics style |
+## תמיכה ופרטיות
 
-Tip: `--words-per-line 1` gives you the big one-word-at-a-time style used in
-podcast/motivational clips. Presets are small dataclasses in
-[`autocaption/styles.py`](autocaption/styles.py) — adding your own is easy.
+דווחו תקלה ב־[Issues](https://github.com/dvicabi/katuv/issues) עם גרסה, מערכת הפעלה והשלבים לשחזור. אל תפרסמו סרטונים, תמלילים או יומנים אישיים ללא בדיקה והסרת פרטים פרטיים. היומנים המקומיים נמצאים בתיקיית ההתקנה: `installation.log` ו־`server.err.log`.
 
-## Using the files in DaVinci Resolve
-
-- **`.davinci.srt`** — import into a subtitle track (`File → Import →
-  Subtitle`). It contains one block per spoken word with the active word
-  wrapped in a `<font color>` tag; Resolve renders the tags, so the highlight
-  jumps word-to-word on playback (most other editors strip them — that's why
-  the burn-in path is the default). Style the track in the Inspector and add a
-  Text+ animation or Dynamic Zoom on top for extra motion.
-- **`.ass`** — keeps the full animations; preview with mpv/VLC or re-burn
-  later: `ffmpeg -i in.mp4 -vf "ass=subs.ass" out.mp4`
-
-## GPU acceleration (optional)
-
-Transcription is fast on CPU (a 60 s short takes a few seconds). For NVIDIA
-GPU inference, install the CUDA runtime DLLs into your venv and `--device
-auto` picks them up automatically:
-
-```bash
-pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
-```
-
-Video *encoding* can use your GPU regardless via `--nvenc`.
-
-## Troubleshooting
-
-- **"ffmpeg not found"** — install FFmpeg (commands above) and open a new
-  terminal. Without it you still get subtitle files, just no burned video.
-- **First run seems stuck** — it's downloading the Whisper model (one time).
-- **"cuda failed ... falling back"** — harmless; GPU DLLs are missing so it
-  transcribes on CPU. See GPU section.
-- **Captions look tiny/huge on unusual resolutions** — tune `--font-size`; it
-  scales relative to a 1080×1920 frame.
-
-## Credits
-
-- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (MIT) for local
-  speech-to-text, and [FFmpeg](https://ffmpeg.org/) + libass for rendering
-- [customtkinter](https://github.com/TomSchimansky/CustomTkinter) (MIT) for
-  the GUI
-- Bundled font: [Anton](https://fonts.google.com/specimen/Anton) by Vernon
-  Adams, licensed under the [SIL Open Font License 1.1](autocaption/fonts/OFL.txt)
-
-## License
-
-[MIT](LICENSE) © Sergio Betancur Chaves
+הקוד ברישיון MIT. רישיונות תלויות, פונטים ומשקלי מודלים מפורטים ב־[THIRD_PARTY.md](THIRD_PARTY.md).

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import replace
@@ -13,7 +14,9 @@ from .ass_builder import build_ass
 from .grouping import group_words
 from .srt_builder import build_srt
 from .styles import PRESETS
-from .transcribe import transcribe
+from .transcribe import transcribe, validate_model
+from .alignment import (Transcript, align_transcript, media_digest, new_report,
+                        report_words, save_report, timing_problems, validate_report)
 
 POSITIONS = {"high": 0.32, "mid": 0.50, "low": 0.68}
 FONTS_DIR = Path(__file__).resolve().parent / "fonts"
@@ -37,15 +40,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--style", choices=sorted(PRESETS), default="pop",
                         help="caption style preset (default: pop)")
     parser.add_argument("--model", default=None,
-                        help="whisper model (default: medium.en on GPU, small.en on CPU)")
+                        help="multilingual whisper model (default: medium on GPU, small on CPU)")
     parser.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
-    parser.add_argument("--language", default="en", help="audio language, or 'auto' to detect")
+    parser.add_argument("--language", default="he", help="ASR language, or 'auto' to detect; transcript alignment always uses Hebrew")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--transcript", help="exact transcript text (UTF-8)")
+    source.add_argument("--transcript-file", type=Path, help="UTF-8 TXT transcript; words are immutable")
+    parser.add_argument("--timings", type=Path, help="resume with a reviewed timing JSON; requires the same transcript")
+    parser.add_argument("--align-only", action="store_true", help="save a timing report for review, without rendering")
     parser.add_argument("--highlight-color", type=_hex_color, default=None, metavar="HEX")
-    parser.add_argument("--font", default=None, help="font name (default: bundled Anton)")
+    parser.add_argument("--font", default=None, help="font name (default: bundled Noto Sans Hebrew)")
     parser.add_argument("--font-size", type=int, default=None,
                         help="size at the 1080x1920 reference scale")
     parser.add_argument("--caps", action=argparse.BooleanOptionalAction, default=None,
-                        help="UPPERCASE the captions (default: on)")
+                        help="UPPERCASE ASR captions; always disabled for supplied transcripts")
     parser.add_argument("--words-per-line", type=int, default=4)
     parser.add_argument("--max-chars", type=int, default=18)
     parser.add_argument("--position", choices=sorted(POSITIONS), default="low")
@@ -58,6 +66,17 @@ def main(argv: list[str] | None = None) -> int:
     input_path = Path(args.input).expanduser().resolve()
     if not input_path.is_file():
         parser.error(f"input file not found: {input_path}")
+    if args.words_per_line < 1 or args.max_chars < 1 or (args.font_size is not None and args.font_size < 1):
+        parser.error("Font size and line limits must be positive.")
+    try:
+        validate_model(args.model)
+        supplied = args.transcript is not None or args.transcript_file is not None
+        transcript = Transcript(args.transcript_file.read_text(encoding="utf-8-sig")
+                                if args.transcript_file else args.transcript) if supplied else None
+    except (OSError, UnicodeError, ValueError) as error:
+        parser.error(str(error))
+    if (args.timings or args.align_only) and transcript is None:
+        parser.error("--timings and --align-only require a transcript.")
 
     style = PRESETS[args.style]
     overrides = {"pos_y": POSITIONS[args.position]}
@@ -70,6 +89,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.caps is not None:
         overrides["caps"] = args.caps
     style = replace(style, **overrides)
+    if transcript is not None:
+        style = replace(style, caps=False)
 
     try:
         media.find_tool("ffmpeg")
@@ -80,12 +101,42 @@ def main(argv: list[str] | None = None) -> int:
         print("[warn] continuing without video features - subtitle files only", file=sys.stderr)
 
     language = None if args.language == "auto" else args.language
-    words = transcribe(input_path, model_name=args.model, device=args.device, language=language)
+    if transcript is not None:
+        report_path = args.timings.resolve() if args.timings else input_path.with_suffix(".timings.json")
+        if args.timings:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            validate_report(report, transcript, media_digest(input_path))
+            if abs(report["duration"] - media.probe_duration(input_path)) > 0.25:
+                raise ValueError("Timing report duration differs from the media.")
+        else:
+            try:
+                report = align_transcript(input_path, transcript, device=args.device)
+            except Exception as error:
+                # Even a failed model load must leave every word available for correction.
+                report = new_report(transcript, media.probe_duration(input_path), media_digest(input_path))
+                for row in report["words"]:
+                    row["reason"] = f"Alignment failed: {error}"
+                print(f"[align] {error}", file=sys.stderr)
+            save_report(report_path, report)
+        print(f"[timings] {report_path}", flush=True)
+        problems = timing_problems(report)
+        if problems:
+            print("[review] Export blocked. Correct these word timings:", flush=True)
+            for problem in problems:
+                print(f"  {problem}", flush=True)
+        if args.align_only:
+            return 0  # GUI always opens the report, including unresolved words.
+        if problems:
+            return 2
+        words = report_words(report)
+    else:
+        words = transcribe(input_path, model_name=args.model, device=args.device, language=language)
     if not words:
         print("No speech detected - nothing to caption.", file=sys.stderr)
         return 1
 
-    lines = group_words(words, max_words=args.words_per_line, max_chars=args.max_chars)
+    lines = group_words(words, max_words=args.words_per_line, max_chars=args.max_chars,
+                        snap_gaps=transcript is None)
     print(f"[captions] {len(lines)} caption lines, style '{style.name}'")
 
     size = media.probe_video_size(input_path) if ffmpeg_ok else None
@@ -110,7 +161,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         fontsdir = FONTS_DIR if FONTS_DIR.is_dir() else None
         print(f"[burn] rendering {out_path.name} ...")
-        media.burn_subtitles(input_path, ass_path, out_path, fontsdir=fontsdir, nvenc=args.nvenc)
+        media.burn_subtitles(input_path, ass_path, out_path, fontsdir=fontsdir, nvenc=args.nvenc,
+                            progress=lambda fraction: print(f"[progress] {fraction:.4f}", flush=True))
         print(f"[out] {out_path}")
 
     return 0

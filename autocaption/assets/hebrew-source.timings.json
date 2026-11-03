@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "transcript": "שלום לכולם. היום אנחנו מכינים סרטון חדש. הכתוביות בעברית נשארות בדיוק כמו שכתבנו.",
+  "transcript_sha256": "cf855d00da0df46a8d565eaf1f5cd94248b7143be46fb69d87f289f87e1970a1",
+  "media_sha256": "f258756392670a8905964be4733aec1875615ba4347d3703dabf1741dbe54b87",
+  "duration": 8.884717,
+  "model": "imvladikon/wav2vec2-xls-r-300m-hebrew",
+  "words": [
+    {
+      "index": 0,
+      "text": "שלום",
+      "start": 0.221,
+      "end": 0.461,
+      "score": 0.9685,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 1,
+      "text": "לכולם.",
+      "start": 0.501,
+      "end": 0.923,
+      "score": 0.9892,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 2,
+      "text": "היום",
+      "start": 1.825,
+      "end": 2.106,
+      "score": 0.90225,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 3,
+      "text": "אנחנו",
+      "start": 2.186,
+      "end": 2.487,
+      "score": 0.7938,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 4,
+      "text": "מכינים",
+      "start": 2.587,
+      "end": 2.928,
+      "score": 0.8986666666666667,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 5,
+      "text": "סרטון",
+      "start": 3.028,
+      "end": 3.409,
+      "score": 0.8939999999999999,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 6,
+      "text": "חדש.",
+      "start": 3.53,
+      "end": 4.031,
+      "score": 0.9916666666666667,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 7,
+      "text": "הכתוביות",
+      "start": 4.954,
+      "end": 5.555,
+      "score": 0.9575,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 8,
+      "text": "בעברית",
+      "start": 5.636,
+      "end": 5.997,
+      "score": 0.9661666666666666,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 9,
+      "text": "נשארות",
+      "start": 6.117,
+      "end": 6.578,
+      "score": 0.8846666666666666,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 10,
+      "text": "בדיוק",
+      "start": 6.679,
+      "end": 7.04,
+      "score": 0.8608,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 11,
+      "text": "כמו",
+      "start": 7.12,
+      "end": 7.34,
+      "score": 0.7153333333333333,
+      "status": "aligned",
+      "reason": ""
+    },
+    {
+      "index": 12,
+      "text": "שכתבנו.",
+      "start": 7.401,
+      "end": 7.942,
+      "score": 0.9983333333333334,
+      "status": "aligned",
+      "reason": ""
+    }
+  ]
+}

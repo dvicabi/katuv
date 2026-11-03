@@ -12,14 +12,16 @@ echo ================================================
 echo.
 
 set "PY_CMD="
-py -3 --version >nul 2>nul && set "PY_CMD=py -3"
+py -3.11 --version >nul 2>nul && set "PY_CMD=py -3.11"
+if not defined PY_CMD py -3.12 --version >nul 2>nul && set "PY_CMD=py -3.12"
+if not defined PY_CMD py -3.13 --version >nul 2>nul && set "PY_CMD=py -3.13"
 if not defined PY_CMD (
     python --version >nul 2>nul && set "PY_CMD=python"
 )
 if not defined PY_CMD (
     echo Python was not found on this computer.
     echo.
-    echo   1. Install it from https://www.python.org/downloads/
+    echo   1. Install Python 3.11 or 3.12 from https://www.python.org/downloads/
     echo      IMPORTANT: tick "Add python.exe to PATH" in the installer
     echo   2. Run AutoCaption.bat again
     echo.
@@ -49,4 +51,10 @@ echo.
 echo Setup complete! Launching auto-caption...
 
 :launch
-start "" ".venv\Scripts\pythonw.exe" -m autocaption.gui
+if /I "%~1"=="--desktop" (
+    start "" ".venv\Scripts\pythonw.exe" -m autocaption.gui
+) else (
+    ".venv\Scripts\python.exe" -c "import fastapi, uvicorn, multipart" >nul 2>nul
+    if errorlevel 1 ".venv\Scripts\python.exe" -m pip install -e .
+    start "" ".venv\Scripts\pythonw.exe" -m autocaption.web --open
+)

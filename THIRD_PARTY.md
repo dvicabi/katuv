@@ -1,0 +1,17 @@
+# Third-party components and model weights
+
+Katuv extends [sebetancurch/auto-caption](https://github.com/sebetancurch/auto-caption), copyright 2026 Sergio Betancur Chaves. The original MIT license is retained in `LICENSE`. Changes do not change the licenses of dependencies or model weights.
+
+The distribution contains the application wheel, scripts, notices, a synthetic Hebrew demonstration and Hebrew fonts. It contains no user projects, recordings, model weights, Python runtime or FFmpeg binary. The installer downloads dependencies from their publishers; the pinned URLs and SHA-256 values for uv and FFmpeg are in `downloads.json`. Python packages are pinned in `requirements-windows.txt`; their license metadata is retained in the installed `.dist-info` directories.
+
+- [uv](https://github.com/astral-sh/uv): MIT / Apache-2.0; manages Python and dependencies. Managed Python retains its bundled notices.
+- [FFmpeg builds by Gyan](https://www.gyan.dev/ffmpeg/builds/): the downloaded essentials build includes GPL components. The original download and its license files are retained under the per-user tools directory. See [FFmpeg licensing](https://ffmpeg.org/legal.html) and the build publisher's source/build information. No FFmpeg binary is included in the release ZIP.
+- Noto Sans Hebrew: SIL Open Font License; `autocaption/fonts/NotoSansHebrew-OFL.txt` is included alongside the fonts. Other existing font notices remain in the package.
+- [WhisperX](https://github.com/m-bain/whisperX), [faster-whisper](https://github.com/SYSTRAN/faster-whisper), PyTorch / torchaudio, transformers, FastAPI and the other dependencies retain their own licenses. See each installed package's metadata.
+- Hebrew acoustic models: [xls-r-300m Hebrew](https://huggingface.co/imvladikon/wav2vec2-xls-r-300m-hebrew), [xlsr-53 Hebrew](https://huggingface.co/imvladikon/wav2vec2-large-xlsr-53-hebrew). Recognition options include [ivrit.ai Large](https://huggingface.co/ivrit-ai/whisper-large-v3-ct2), [ivrit.ai Turbo](https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ct2) and multilingual Whisper checkpoints. Consult each model card's current terms before redistribution or commercial use. These models download separately to the user's cache; they are not included in the ZIP.
+- Optional vocal separation uses torchaudio's HDEMUCS_HIGH_MUSDB_PLUS weights, downloaded separately.
+- **Optional MMS forced-alignment weights are CC-BY-NC 4.0 (noncommercial)**, as stated in the [official torchaudio documentation](https://docs.pytorch.org/audio/stable/generated/torchaudio.pipelines.MMS_FA.html). They are not downloaded by the default setup. The explicit noncommercial option also prepares local Phonikud for the optional phonetic pass. The opt-in is saved locally and gates both model execution and replay of cached MMS measurements. Cached weights alone never enable this pass. Commercial users should keep this option disabled. The application's MIT license does not override this restriction.
+
+The synthetic demo was generated locally from the provided Hebrew sample text. It contains no user's video, song or transcript. No watermark is added by the app.
+
+- [Inno Setup](https://jrsoftware.org/isinfo.php) 7.1.1 builds the Windows installer; its compiler is a build-time dependency. The installer includes the official Hebrew translation. See the [Inno Setup license](https://github.com/jrsoftware/issrc/blob/is-7_1_1/license.txt).

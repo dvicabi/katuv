@@ -1,0 +1,43 @@
+name: Windows installer candidate
+on:
+  push:
+    branches: [main, 'codex/release-*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned CPU dependencies
+        run: |
+          python -m pip install uv==0.12.3
+          uv pip install --system --torch-backend=cpu -r packaging/requirements-windows.txt
+          uv pip install --system --no-deps -e .
+          uv pip install --system pytest fonttools httpx
+      - name: Prepare FFmpeg
+        run: python -m autocaption.bootstrap --prepare
+      - name: Test source checkout
+        run: python -m pytest -q
+      - name: Install verified compiler on the disposable runner
+        shell: pwsh
+        run: |
+          $file = Join-Path $env:RUNNER_TEMP 'innosetup-7.1.1-x64.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe' -OutFile $file
+          $sig = Get-AuthenticodeSignature -LiteralPath $file
+          if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Pyrsys B.V.') { throw 'Compiler publisher signature invalid' }
+          $compiler = Join-Path $env:RUNNER_TEMP 'inno-7.1.1'
+          $p = Start-Process $file -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER',('/DIR="' + $compiler + '"')) -WindowStyle Hidden -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Compiler installation failed' }
+          "KATUV_ISCC=$compiler\ISCC.exe" | Out-File $env:GITHUB_ENV -Append
+      - name: Build and audit internal candidate
+        run: python scripts/build_release.py --exe
+      # Deliberately no upload-artifact or release step: unsigned installers stay on this disposable runner.

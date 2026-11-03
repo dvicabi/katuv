@@ -5,8 +5,8 @@ Bug reports, feature ideas, and pull requests are all welcome!
 ## Dev setup
 
 ```bash
-git clone https://github.com/sebetancurch/auto-caption
-cd auto-caption
+git clone https://github.com/dvicabi/katuv
+cd katuv
 python -m venv .venv
 # Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
 pip install -e .[dev]
@@ -30,3 +30,5 @@ CI runs the same tests on Windows, macOS, and Linux.
   see how `pop` and `karaoke` are built in `autocaption/ass_builder.py`)
 - Word-level correction UI (edit the transcript before rendering)
 - Translations of the GUI
+
+Release preparation, signing and acceptance: [distribution](docs/distribution.md), [code signing](docs/code-signing.md). Never commit user recordings, project screenshots, credentials or model weights. Internal unsigned candidates must not be attached to public releases.

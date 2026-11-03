@@ -6,6 +6,10 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
+
+from .models import (MULTILINGUAL_MODELS, SpeechModelError, cached_model_path,
+                     model_label, prepare_model, validate_model)
 
 
 @dataclass
@@ -13,11 +17,12 @@ class Word:
     text: str
     start: float
     end: float
+    probability: float | None = None
 
 
 def _default_model(device: str, language: str | None) -> str:
     size = "medium" if device == "cuda" else "small"
-    return f"{size}.en" if language == "en" else size
+    return size
 
 
 def _add_nvidia_pip_dirs_to_path() -> None:
@@ -61,14 +66,17 @@ def transcribe(
     media_path: str | Path,
     model_name: str | None = None,
     device: str = "auto",
-    language: str | None = "en",
+    language: str | None = "he",
     verbose: bool = True,
+    progress: Callable[[str], None] | None = None,
+    vad_filter: bool = True,
 ) -> list[Word]:
     """Transcribe an audio or video file into one Word per spoken word.
 
     device="auto" tries CUDA first and falls back to CPU int8 — GPU inference
     needs cuBLAS/cuDNN DLLs that are not installed by default on Windows.
     """
+    validate_model(model_name)
     attempts: list[tuple[str, str]] = []
     if device == "cuda" or (device == "auto" and _cuda_usable()):
         attempts.append(("cuda", "float16"))
@@ -84,12 +92,14 @@ def transcribe(
                     f"[transcribe] loading model '{name}' on {dev} ({compute_type})..."
                     " (first use downloads it - one time)"
                 )
-            return _run(media_path, name, dev, compute_type, language, verbose)
+            return _run(media_path, name, dev, compute_type, language, verbose, progress, vad_filter)
         except Exception as error:  # CUDA/CTranslate2 failures surface here
             last_error = error
             if i + 1 < len(attempts):
                 print(f"[transcribe] {dev} failed ({error}); falling back...", file=sys.stderr)
-    raise last_error  # type: ignore[misc]
+    label = model_label(model_name or _default_model("cpu", language))
+    raise SpeechModelError(f"לא הצלחנו להפעיל את {label}. בהורדה ראשונה בדקו חיבור לאינטרנט ומקום פנוי. "
+                           "אפשר לנסות שוב או לבחור מודל קל יותר, כמו Whisper Small.") from last_error
 
 
 def _run(
@@ -99,15 +109,25 @@ def _run(
     compute_type: str,
     language: str | None,
     verbose: bool,
+    progress: Callable[[str], None] | None = None,
+    vad_filter: bool = True,
 ) -> list[Word]:
     from faster_whisper import WhisperModel
+    import numpy as np
+    from .media import extract_audio
 
-    model = WhisperModel(model_name, device=device, compute_type=compute_type)
+    cached = cached_model_path(model_name)
+    if progress:
+        progress(("טוענים מהמחשב: " if cached else "מורידים וטוענים בפעם הראשונה: ") + model_label(model_name))
+    model = WhisperModel(cached or prepare_model(model_name), device=device, compute_type=compute_type)
+    if progress:
+        progress("מקשיבים בעברית עם " + model_label(model_name) + ". העיבוד מתבצע במחשב שלכם.")
     segments, info = model.transcribe(
-        str(media_path),
+        np.frombuffer(extract_audio(Path(media_path)), dtype=np.float32).copy(),
         language=language,
         word_timestamps=True,
-        vad_filter=True,
+        vad_filter=vad_filter,
+        condition_on_previous_text=False,
     )
     words: list[Word] = []
     for segment in segments:
@@ -116,7 +136,8 @@ def _run(
         for w in segment.words or []:
             text = w.word.strip()
             if text:
-                words.append(Word(text=text, start=float(w.start), end=float(w.end)))
+                words.append(Word(text=text, start=float(w.start), end=float(w.end),
+                                  probability=float(w.probability)))
     if verbose:
         print(f"[transcribe] {len(words)} words (language: {info.language})")
     return words

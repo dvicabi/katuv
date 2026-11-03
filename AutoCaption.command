@@ -26,4 +26,8 @@ if [ ! -x ".venv/bin/python" ]; then
     echo "Setup complete! Launching auto-caption..."
 fi
 
-exec .venv/bin/python -m autocaption.gui
+if [[ "${1:-}" == "--desktop" ]]; then
+    exec .venv/bin/python -m autocaption.gui
+fi
+.venv/bin/python -c "import fastapi, uvicorn, multipart" 2>/dev/null || .venv/bin/python -m pip install -e .
+exec .venv/bin/python -m autocaption.web --open

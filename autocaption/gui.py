@@ -36,6 +36,7 @@ from .cli import FONTS_DIR, POSITIONS
 from .grouping import CaptionLine
 from .styles import PRESETS
 from .transcribe import Word
+from .alignment import Transcript, media_digest, report_words, save_report, timing_problems, validate_report
 
 CONFIG_PATH = Path(os.environ.get("APPDATA", str(Path.home()))) / "autocaption" / "settings.json"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -47,25 +48,25 @@ MEDIA_EXTENSIONS = {
 
 MODEL_CHOICES = {
     "auto (recommended)": None,
-    "tiny.en - fastest": "tiny.en",
-    "base.en - fast": "base.en",
-    "small.en - balanced": "small.en",
-    "medium.en - accurate": "medium.en",
+    "tiny - fastest": "tiny",
+    "base - fast": "base",
+    "small - balanced": "small",
+    "medium - accurate": "medium",
     "large-v3 - best (multilingual)": "large-v3",
 }
 
-LANGUAGES = ["en", "auto", "es", "pt", "fr", "de", "it"]
+LANGUAGES = ["he", "auto", "en", "es", "pt", "fr", "de", "it"]
 
 DEFAULT_SETTINGS = {
     "style": "pop",
     "position": "low",
     "highlight_color": "#FFD700",
-    "font": "Anton",
+    "font": "Noto Sans Hebrew",
     "font_size": "130",
     "words_per_line": "4",
-    "language": "en",
+    "language": "he",
     "model_label": "auto (recommended)",
-    "caps": True,
+    "caps": False,
     "burn": True,
     "srt": True,
     "nvenc": False,
@@ -108,24 +109,19 @@ def settings_to_style(s: dict):
     )
 
 
-def render_preview(style, out_png: Path, width: int = 540, height: int = 960) -> None:
-    """Render one sample caption frame ("EVERY SINGLE WORD", middle word active)."""
-    line = CaptionLine([Word("Every", 0.0, 10.0), Word("single", 10.0, 20.0), Word("word", 20.0, 30.0)])
+def render_preview(style, out_png: Path, width: int = 540, height: int = 960,
+                   text: str = "שלום, Reels 2026!") -> None:
+    """Use the production ASS/libass renderer, including real Hebrew bidi."""
+    tokens = Transcript(text).tokens[:4]
+    line = CaptionLine([Word(token, i * 10.0, (i + 1) * 10.0) for i, token in enumerate(tokens)])
     ass_file = out_png.with_suffix(".ass")
     ass_file.write_text(build_ass([line], style, width, height), encoding="utf-8")
-    vf = f"ass=filename='{media._filter_path(ass_file)}'"
-    if FONTS_DIR.is_dir():
-        vf += f":fontsdir='{media._filter_path(FONTS_DIR)}'"
-    subprocess.run(
-        [
-            media.find_tool("ffmpeg"), "-y", "-hide_banner", "-loglevel", "error",
-            "-f", "lavfi", "-i", f"color=c=0x1a2436:s={width}x{height}:d=30:r=1",
-            "-ss", "15", "-frames:v", "1", "-vf", vf, str(out_png),
-        ],
-        check=True,
-        capture_output=True,
-        creationflags=CREATE_NO_WINDOW,
-    )
+    with media.subtitle_workspace(ass_file, FONTS_DIR) as (cwd, vf):
+        subprocess.run(
+            [media.find_tool("ffmpeg"), "-y", "-hide_banner", "-loglevel", "error",
+             "-f", "lavfi", "-i", f"color=c=0x1a2436:s={width}x{height}:d=40:r=1",
+             "-ss", str(min(15, len(tokens) * 10 - 5)), "-frames:v", "1", "-vf", vf, str(out_png.resolve())],
+            check=True, capture_output=True, cwd=cwd, creationflags=CREATE_NO_WINDOW)
 
 
 def _reveal_in_file_manager(path: Path) -> None:
@@ -141,7 +137,7 @@ def _reveal_in_file_manager(path: Path) -> None:
 
 def available_fonts() -> list[str]:
     """Bundled fonts first, then installed system font families."""
-    bundled = sorted({f.stem.split("-")[0] for f in FONTS_DIR.glob("*.ttf")}) if FONTS_DIR.is_dir() else []
+    bundled = ["Noto Sans Hebrew", "Anton"]
     system = sorted(
         {name for name in tkfont.families() if not name.startswith("@")},
         key=str.lower,
@@ -169,9 +165,9 @@ class App(_AppBase):
     def __init__(self):
         super().__init__()
         ctk.set_appearance_mode("dark")
-        self.title("Auto-Caption")
-        self.geometry("760x780")
-        self.minsize(680, 700)
+        self.title("Auto-Caption · Hebrew Reels")
+        self.geometry("960x940")
+        self.minsize(900, 860)
 
         self.files: list[Path] = []
         self._worker_thread: threading.Thread | None = None
@@ -180,6 +176,9 @@ class App(_AppBase):
         self._last_output: str | None = None
         self._log_q: queue.Queue = queue.Queue()
         self._preview_photo = None  # keep a reference so Tk doesn't GC the image
+        self._review_context = None
+        self._pending_report = None
+        self._job_temp = tempfile.TemporaryDirectory(prefix="autocaption-transcript-")
 
         self.dnd_available = HAS_DND and getattr(self, "_dnd_ok", False)
         self._build_ui()
@@ -214,7 +213,7 @@ class App(_AppBase):
     def _build_ui(self) -> None:
         pad = {"padx": 12, "pady": 6}
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(4, weight=1)
+        self.grid_rowconfigure(5, weight=1)
 
         # -- drop zone
         drop_text = (
@@ -248,9 +247,25 @@ class App(_AppBase):
             row=0, column=1, rowspan=2, padx=10, pady=6
         )
 
+        # Transcript is optional; once supplied it is the only source of words.
+        transcript_frame = ctk.CTkFrame(self)
+        transcript_frame.grid(row=2, column=0, sticky="ew", **pad)
+        transcript_frame.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(transcript_frame, text="Exact Hebrew transcript (optional) · one video at a time",
+                     anchor="w").grid(row=0, column=0, sticky="ew", padx=10)
+        ctk.CTkButton(transcript_frame, text="Upload TXT", width=110,
+                      command=self._upload_transcript).grid(row=0, column=1, padx=10, pady=5)
+        self.transcript_box = ctk.CTkTextbox(transcript_frame, height=95, font=("Arial", 18), wrap="word")
+        self.transcript_box.grid(row=1, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+        ctk.CTkLabel(transcript_frame,
+                     text="Pasted words stay exact. Generate → align → review timings → export. Blank = multilingual ASR.",
+                     anchor="w").grid(row=2, column=0, columnspan=2, sticky="ew", padx=10)
+        ctk.CTkButton(transcript_frame, text="Resume timing report", command=self._resume_report,
+                      width=180).grid(row=3, column=0, sticky="w", padx=10, pady=5)
+
         # -- settings grid
         grid = ctk.CTkFrame(self)
-        grid.grid(row=2, column=0, sticky="ew", **pad)
+        grid.grid(row=3, column=0, sticky="ew", **pad)
         for col in (1, 3):
             grid.grid_columnconfigure(col, weight=1)
 
@@ -317,7 +332,7 @@ class App(_AppBase):
 
         # -- action row
         actions = ctk.CTkFrame(self, fg_color="transparent")
-        actions.grid(row=3, column=0, sticky="ew", **pad)
+        actions.grid(row=4, column=0, sticky="ew", **pad)
         actions.grid_columnconfigure(1, weight=1)
         self.preview_button = ctk.CTkButton(actions, text="Preview style", command=self._preview)
         self.preview_button.grid(row=0, column=0, padx=(0, 8))
@@ -337,7 +352,7 @@ class App(_AppBase):
 
         # -- log
         self.log_box = ctk.CTkTextbox(self, wrap="word")
-        self.log_box.grid(row=4, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.log_box.grid(row=5, column=0, sticky="nsew", padx=12, pady=(0, 12))
         self.log_box.configure(state="disabled")
 
     # ---------------------------------------------------------- settings
@@ -350,7 +365,7 @@ class App(_AppBase):
             "font": self.font_var.get(),
             "font_size": self.font_size_var.get().strip() or DEFAULT_SETTINGS["font_size"],
             "words_per_line": self.words_var.get(),
-            "language": self.language_var.get().strip() or "en",
+            "language": self.language_var.get().strip() or "he",
             "model_label": self.model_var.get(),
             "caps": self.caps_var.get(),
             "burn": self.burn_var.get(),
@@ -441,11 +456,45 @@ class App(_AppBase):
 
     # --------------------------------------------------------- preview
 
+    def _upload_transcript(self) -> None:
+        filename = filedialog.askopenfilename(title="Exact Hebrew transcript", filetypes=[("UTF-8 text", "*.txt")])
+        if filename:
+            try:
+                text = Path(filename).read_text(encoding="utf-8-sig")
+                Transcript(text)
+            except (OSError, UnicodeError, ValueError) as error:
+                messagebox.showerror("Transcript", str(error))
+                return
+            self.transcript_box.delete("1.0", "end")
+            self.transcript_box.insert("1.0", text)
+
+    def _resume_report(self) -> None:
+        if self._worker_thread and self._worker_thread.is_alive():
+            return
+        if len(self.files) != 1:
+            messagebox.showinfo("Choose one video", "Add the original video and paste/upload its exact transcript first.")
+            return
+        filename = filedialog.askopenfilename(title="Resume timings", filetypes=[("Timing report", "*.timings.json"), ("JSON", "*.json")])
+        if not filename:
+            return
+        try:
+            transcript = Transcript(self.transcript_box.get("1.0", "end-1c"))
+            flags = settings_to_flags(self._gather_settings())
+            source = Path(self._job_temp.name) / "transcript.txt"
+            source.write_text(transcript.text, encoding="utf-8")
+            self._review_context = (self.files[0], transcript, source, flags)
+            self._timing_editor(Path(filename))
+        except Exception as error:
+            messagebox.showerror("Timing report", str(error))
+
     def _preview(self) -> None:
         try:
             style = settings_to_style(self._gather_settings())
+            transcript = self.transcript_box.get("1.0", "end-1c")
+            if transcript.strip():
+                style = replace(style, caps=False)
             out_png = Path(tempfile.gettempdir()) / "autocaption_preview.png"
-            render_preview(style, out_png)
+            render_preview(style, out_png, text=transcript if transcript.strip() else "שלום, Reels 2026!")
         except Exception as error:
             messagebox.showerror("Preview failed", str(error))
             return
@@ -457,6 +506,75 @@ class App(_AppBase):
 
     # -------------------------------------------------------- pipeline
 
+    def _timing_editor(self, path: Path) -> None:
+        if self._review_context is None:
+            return
+        file, transcript, source, flags = self._review_context
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+            validate_report(report, transcript, media_digest(file))
+        except Exception as error:
+            messagebox.showerror("Cannot open timing report", str(error))
+            return
+        window = ctk.CTkToplevel(self)
+        window.title("Review word timings · text is locked")
+        window.geometry("1000x650")
+        window.after(50, window.lift)
+        window.grab_set()
+        unresolved = len(timing_problems(report))
+        ctk.CTkLabel(window, text=f"{len(report['words'])} exact words · {unresolved} need correction · seconds from start",
+                     font=ctk.CTkFont(size=18, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(window, text="Review estimates against the source. Fill every missing time. Timings must be ordered and non-overlapping.").pack()
+        table = ctk.CTkScrollableFrame(window)
+        table.pack(fill="both", expand=True, padx=12, pady=10)
+        entries = []
+        for col, title in enumerate(("#", "Immutable word", "Start (s)", "End (s)", "Alignment / reason")):
+            ctk.CTkLabel(table, text=title).grid(row=0, column=col, padx=10, pady=5)
+        for index, row in enumerate(report["words"], 1):
+            color = "#FFD700" if row["status"] == "unaligned" else "gray85"
+            ctk.CTkLabel(table, text=str(index), text_color=color).grid(row=index, column=0, padx=5)
+            ctk.CTkLabel(table, text=row["text"], font=("Arial", 18), anchor="e",
+                         width=190).grid(row=index, column=1, padx=10, pady=4)
+            start, end = ctk.CTkEntry(table, width=90), ctk.CTkEntry(table, width=90)
+            for col, widget, value in ((2, start, row["start"]), (3, end, row["end"])):
+                widget.grid(row=index, column=col, padx=5, pady=4)
+                if value is not None:
+                    widget.insert(0, f"{value:.3f}")
+            ctk.CTkLabel(table, text=row["reason"] or row["status"], text_color=color,
+                         wraplength=390, justify="left").grid(row=index, column=4, padx=10, sticky="w")
+            entries.append((start, end))
+        buttons = ctk.CTkFrame(window)
+        buttons.pack(fill="x", padx=12, pady=10)
+
+        def save(export=False):
+            try:
+                for row, (start, end) in zip(report["words"], entries):
+                    values = [float(widget.get()) if widget.get().strip() else None for widget in (start, end)]
+                    if values != [row["start"], row["end"]]:
+                        row.update(start=values[0], end=values[1], status="manual", reason="")
+                validate_report(report, transcript, report["media_sha256"])
+                if export:
+                    report_words(report)  # validates all words, bounds and order
+                save_report(path, report)
+                if export:
+                    window.destroy()
+                    self._pending_report = None
+                    self._start_job([file], [*flags, "--transcript-file", str(source), "--timings", str(path)])
+                else:
+                    messagebox.showinfo("Saved", f"Saved {path.name}. {len(timing_problems(report))} words still need correction.", parent=window)
+            except (ValueError, OSError) as error:
+                messagebox.showerror("Correct timings before export", str(error), parent=window)
+
+        def play():
+            if sys.platform == "win32":
+                os.startfile(file)
+            else:
+                subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(file)])
+
+        ctk.CTkButton(buttons, text="Play original video", command=play).pack(side="left", padx=8, pady=8)
+        ctk.CTkButton(buttons, text="Save timings", command=save).pack(side="left", padx=8)
+        ctk.CTkButton(buttons, text="Export reviewed captions", command=lambda: save(True)).pack(side="right", padx=8)
+
     def _generate(self) -> None:
         if self._worker_thread and self._worker_thread.is_alive():
             return
@@ -466,6 +584,21 @@ class App(_AppBase):
         self._save_settings()
         flags = settings_to_flags(self._gather_settings())
         files = list(self.files)
+        transcript_text = self.transcript_box.get("1.0", "end-1c")
+        self._review_context = None
+        self._pending_report = None
+        if transcript_text.strip():
+            if len(files) != 1:
+                messagebox.showinfo("One transcript, one video", "Keep one video in the queue when supplying a transcript.")
+                return
+            transcript = Transcript(transcript_text)
+            source = Path(self._job_temp.name) / "transcript.txt"
+            source.write_text(transcript.text, encoding="utf-8")
+            self._review_context = (files[0], transcript, source, flags)
+            flags = [*flags, "--transcript-file", str(source), "--align-only"]
+        self._start_job(files, flags)
+
+    def _start_job(self, files: list[Path], flags: list[str]) -> None:
         self._cancelled = False
         self._last_output = None
         self.generate_button.configure(state="disabled")
@@ -491,10 +624,16 @@ class App(_AppBase):
                     text=True,
                     encoding="utf-8",
                     errors="replace",
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                    start_new_session=sys.platform != "win32",
                     creationflags=CREATE_NO_WINDOW,
                 )
                 for line in self._proc.stdout:
                     self._log_q.put(line)
+                    if line.startswith("[timings] ") and "--align-only" in flags:
+                        self._pending_report = Path(line.strip()[10:])
+                    if line.startswith("[progress] "):
+                        self._log_q.put(("__progress__", (i - 1 + float(line.split()[1])) / len(files)))
                     match = re.match(r"\[out\] (.+)", line.strip())
                     if match:
                         self._last_output = match.group(1)
@@ -510,12 +649,17 @@ class App(_AppBase):
         else:
             done = len(files) - failures
             self._log_q.put(f"\n=== Done: {done}/{len(files)} file{'s' if len(files) != 1 else ''} processed ===\n")
-        self._log_q.put(("__finished__",))
+        self._log_q.put(("__finished__", not failures and not self._cancelled))
 
     def _cancel(self) -> None:
         self._cancelled = True
         if self._proc and self._proc.poll() is None:
-            self._proc.terminate()
+            if sys.platform == "win32":
+                subprocess.run(["taskkill", "/PID", str(self._proc.pid), "/T", "/F"],
+                               capture_output=True, creationflags=CREATE_NO_WINDOW)
+            else:
+                import signal
+                os.killpg(self._proc.pid, signal.SIGTERM)
 
     def _open_output(self) -> None:
         if self._last_output and Path(self._last_output).exists():
@@ -538,11 +682,18 @@ class App(_AppBase):
                 if isinstance(item, tuple) and item[0] == "__finished__":
                     self.progress.stop()
                     self.progress.configure(mode="determinate")
-                    self.progress.set(1)
+                    self.progress.set(1 if item[1] else 0)
                     self.generate_button.configure(state="normal")
                     self.cancel_button.configure(state="disabled")
                     if self._last_output:
                         self.open_button.configure(state="normal")
+                    if item[1] and self._pending_report:
+                        path, self._pending_report = self._pending_report, None
+                        self._timing_editor(path)
+                elif isinstance(item, tuple) and item[0] == "__progress__":
+                    self.progress.stop()
+                    self.progress.configure(mode="determinate")
+                    self.progress.set(item[1])
                 else:
                     self._log(item)
         except queue.Empty:

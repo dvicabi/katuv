@@ -1,5 +1,6 @@
 # environments / caches
 .venv/
+.venv312/
 __pycache__/
 *.pyc
 *.egg-info/
@@ -14,3 +15,22 @@ demo/
 
 # GUI state
 settings.json
+.tools/
+samples/output/
+.pytest_cache/
+.test-output/
+.autocaption-web/
+*.timings.json
+!autocaption/assets/hebrew-source.timings.json
+
+# Local project screenshots are not public documentation assets.
+docs/*.jpg
+docs/*.png
+!docs/gui.png
+!docs/style-karaoke.png
+!docs/style-pop.png
+docs/*.webp
+acceptance*.json
+*.pfx
+*.p12
+*.key

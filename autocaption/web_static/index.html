@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="theme-color" content="#101112"><meta name="description" content="הסטודיו שלכם לכתוביות בעברית. הסרטון, המילים והשליטה נשארים אצלכם.">
+ <title>כתוב — כתוביות בעברית, בשלושה צעדים</title>
+ <link rel="icon" href="/assets/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/studio.css"><link rel="stylesheet" href="/assets/atelier.css?v=1.3.0">
+ <script src="/assets/shortcuts.js?v=20261101-singing-recovery1" defer></script><script src="/assets/motion.js" defer></script><script src="/assets/timeline.js" defer></script><script src="/assets/editing.js" defer></script><script src="/assets/timecode.js" defer></script><script src="/assets/passage-timeline.js?v=20261101-singing-recovery1" defer></script><script src="/assets/word-editing.js?v=20261101-singing-recovery1" defer></script><script src="/assets/timeline-scrollbar.js?v=20261101-singing-recovery1" defer></script><script src="/assets/word-timeline.js?v=20261101-singing-recovery1" defer></script><script src="/assets/studio.js?v=1.3.0" defer></script>
+<link rel="stylesheet" href="/assets/setup.css?v=1.3.0">
+<script src="/assets/setup.js?v=1.3.0" defer></script>
+</head><body data-step="1">
+<a href="#main" class="skip-link">דילוג לתוכן</a>
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+ <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></symbol>
+ <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+ <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8Zm0 0v5h5M8 12h8m-8 4h6"/></symbol>
+ <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="m16 10 5-3v10l-5-3"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/></symbol>
+ <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 4 6 8H3v8h3l5 4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+ <symbol id="i-frame" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="12" cy="12" r="4"/></symbol>
+ <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4m0 3v1"/></symbol>
+</svg>
+<input id="videoInput" type="file" accept=".mp4,video/mp4" hidden>
+<input id="textInput" type="file" accept=".txt,text/plain" hidden>
+<header class="topbar">
+ <a class="brand" href="/" aria-label="כתוב, מסך הבית"><img src="/assets/mark.svg" alt=""><strong>כתוב<span>.</span></strong><span class="brand-sub">הסטודיו לכתוביות בעברית</span></a>
+ <span class="local-badge"><i></i><span id="deviceBadge">הכול נשאר אצלכם</span></span>
+ <nav aria-label="פעולות נוספות"><button id="historyButton" class="quiet-button"><svg><use href="#i-clock"/></svg>הסרטונים שלי</button><button id="newButton" class="quiet-button"><svg><use href="#i-plus"/></svg>סרטון חדש</button><button id="helpButton" class="quiet-button" aria-label="עזרה"><svg><use href="#i-help"/></svg><span>עזרה</span></button></nav>
+</header>
+<div class="device-toolbar" aria-label="הכנת המחשב"><button id="systemButton" class="quiet-button">הכנת המחשב</button></div>
+<main id="main" class="app-main">
+ <ol class="steps" aria-label="שלבי הכנת הכתוביות">
+  <li id="step1" aria-current="step"><span class="step-number">1</span><span>בוחרים סרטון</span></li>
+  <li id="step2"><span class="step-number">2</span><span>מוסיפים מילים</span></li>
+  <li id="step3"><span class="step-number">3</span><span>בודקים ומורידים</span></li>
+ </ol>
+ <div class="page-heading"><span id="stepLabel" class="eyebrow">מילים טובות ראויות להיראות.</span><h1 id="pageTitle" tabindex="-1">המילים שלכם.&#10;הקצב שלכם.</h1><p id="pageHint">מסרטון לכתוביות שאי אפשר לפספס. בעברית, בדיוק בזמן ובסגנון שלכם.</p></div>
+ <div id="exportToolbar" class="export-toolbar" hidden></div>
+ <div id="errorBanner" class="error-banner" role="alert" hidden><svg><use href="#i-help"/></svg><span id="errorMessage"></span><button id="dismissError" class="icon-button" aria-label="סגירת ההודעה"><svg><use href="#i-close"/></svg></button></div>
+ <section id="welcome" class="welcome" aria-label="בחירת סרטון">
+  <div class="upload-card" id="uploadZone">
+   <h2>מתחילים עם הסרטון שלכם</h2><p>גררו לכאן MP4, או בחרו מהמחשב.</p>
+   <button id="chooseVideo" class="primary large"><span>בחירת סרטון מהמחשב</span><svg><use href="#i-arrow"/></svg></button>
+   <span class="file-hint">אפשר גם לגרור לכאן MP4 · עד 2 ג׳יגה־בייט</span>
+   <div class="source-progress" id="uploadProgress" hidden><span></span></div><p id="uploadStatus" class="upload-status" hidden>פותחים את הסרטון…</p>
+   <button id="demoButton" class="text-button demo-link">רק רוצים לנסות? פתחו סרטון לדוגמה <span aria-hidden="true">←</span></button>
+  </div>
+  <div class="welcome-example" aria-label="דוגמה מונפשת לעיצוב כתוביות">
+   <div class="art-grid"></div><span class="art-label">קצת קול. הרבה אופי.</span>
+   <div class="art-orbit"></div>
+   <div class="reel-card reel-back" aria-hidden="true"><span class="reel-mini-label">הסיפור שלכם</span><strong>לכל<br>מילה<br><em>יש כוח.</em></strong><span class="reel-foot">עברית. בתנועה.</span></div>
+   <div class="reel-card reel-front"><div class="reel-top"><span><i></i>תצוגת סגנון</span><span dir="ltr">9:16</span></div><span class="reel-watermark" aria-hidden="true">א</span><div class="hero-caption"><span>יש לכם</span><span class="hero-active">מה להגיד.</span><i class="corner one"></i><i class="corner two"></i><i class="corner three"></i><i class="corner four"></i></div><div class="hero-wave" aria-hidden="true"></div><div class="reel-bottom"><span>כל מילה במקום.</span><span dir="ltr">00:08</span></div></div>
+   <div class="art-note note-one"><span class="note-dot"></span>המילה הנכונה. הרגע הנכון.</div><div class="art-note note-two"><svg><use href="#i-lock"/></svg>בלי ענן. בלי סימן מים.</div>
+   <span class="art-index" aria-hidden="true">01 — 04</span>
+  </div>
+ </section>
+ <section id="welcomeFeatures" class="welcome-features" aria-label="פשוט מההתחלה ועד ההורדה"><div><span>01</span><strong>הסרטון שלכם</strong><p>מעלים מהמחשב. שום דבר לא יוצא ממנו.</p></div><div><span>02</span><strong>המילים שלכם</strong><p>מדביקים טקסט מדויק או יוצרים לפי הקול.</p></div><div><span>03</span><strong>הסגנון שלכם</strong><p>בוחרים תנועה, משחקים בעיצוב ומורידים.</p></div></section>
+ <div class="workspace" id="workspace" hidden>
+  <section class="content-panel card">
+   <div class="source-row"><svg><use href="#i-video"/></svg><div><strong id="sourceName" dir="auto"></strong><small id="sourceInfo"></small></div><button id="uploadButton" class="text-button">החלפת סרטון</button></div>
+   <div id="inputMode" class="input-mode">
+    <div class="mode-tabs" role="tablist" aria-label="איך נוסיף את המילים?"><button id="exactMode" role="tab" aria-selected="true" class="selected">יש לי את הטקסט</button><button id="autoMode" role="tab" aria-selected="false">אין לי טקסט</button></div>
+    <div class="input-label"><label for="transcript">מה אומרים בסרטון?</label><span id="wordCount" class="count">0 מילים</span></div>
+    <textarea id="transcript" dir="auto" spellcheck="false" aria-describedby="exactNote transcriptError" placeholder="הדביקו או כתבו כאן את כל מה שנאמר בסרטון, לפי הסדר.&#10;&#10;כולל סימני פיסוק, מספרים ומילים באנגלית, אם יש."></textarea>
+    <p id="transcriptError" class="field-error" role="alert" hidden></p>
+    <div id="exactExtras"><button id="uploadText" class="text-button"><svg><use href="#i-file"/></svg>יש לי קובץ טקסט</button><small>קובץ עם סיומת .txt</small></div>
+    <p id="exactNote" class="source-note"><svg><use href="#i-lock"/></svg><span>מה שכתבתם זה מה שיופיע. לא משנים מילים.</span></p>
+    <div id="autoNote" class="auto-note" hidden><span class="large-icon"><svg><use href="#i-spark"/></svg></span><h2>נכתוב לפי מה ששומעים.</h2><p>נזהה את הדיבור בעברית וניצור ממנו כתוביות. אחר כך אפשר לבדוק ולתקן את הטקסט.</p><small>יש לכם טקסט מדויק? בחרו ״יש לי את הטקסט״.</small></div>
+    <details id="modelPicker" class="model-picker disclosure"><summary>בחירת מודל · אוטומטי כברירת מחדל</summary><div class="details-body">
+     <div class="model-heading"><label id="speechModelLabel" for="speechModel">מי מקשיב לסרטון?</label><span>זיהוי מקומי בעברית</span></div>
+     <select id="speechModel" aria-describedby="modelDescription modelDownload modelPurpose" disabled><option value="auto">אוטומטי — התאמה למחשב שלי</option></select>
+     <div id="autoModelResult" class="auto-model-result" hidden><span>נבחר למחשב שלכם</span><strong id="autoModelName" dir="auto"></strong><small>עדיפות למודל עברי, לפי המשאבים הזמינים</small></div>
+     <p id="modelDescription">טוענים את רשימת המודלים…</p>
+     <div class="model-facts"><span id="modelCached" class="model-cache"></span><span id="modelSize" dir="auto"></span></div>
+     <p id="modelHardware" class="model-detail"></p>
+     <p id="modelDownload" class="model-detail">המודל יורד פעם אחת בשימוש הראשון. הסרטון והטקסט נשארים במחשב.</p>
+     <p id="modelPurpose" class="model-purpose"></p>
+     <p id="modelProvenance" class="model-provenance" role="status" hidden></p>
+    </div></details>
+    <div class="next-action"><button id="alignButton" class="primary large full-width"><svg><use href="#i-spark"/></svg><span>יצירת כתוביות</span><svg><use href="#i-arrow"/></svg></button><p id="alignHint">אנחנו נמצא מתי כל מילה נאמרת בסרטון.</p><button id="startSegments" class="secondary full-width">לתזמן בית או פזמון בעצמי · בלי זיהוי דיבור</button><button id="cancelEdit" class="text-button" hidden>ביטול וחזרה לכתוביות הקיימות</button></div>
+   </div>
+   <div id="reviewMode" class="review-mode" hidden>
+    <div class="caption-mode" role="group" aria-label="איך מציגים את הכתוביות"><button id="wordCaptionMode" aria-pressed="true">מילים לפי הדיבור</button><button id="segmentCaptionMode" aria-pressed="false">בתים ופזמונים · זמן משלי</button></div>
+    <div class="editor-tabs" role="tablist" aria-label="כלי העריכה"><button id="designTab" role="tab" aria-selected="true" aria-controls="designPane"><svg><use href="#i-spark"/></svg>עיצוב ותנועה</button><button id="timingTab" role="tab" aria-selected="false" aria-controls="timingPane"><svg><use href="#i-clock"/></svg><span id="timingTabLabel">מילים ותזמון</span><span id="reviewBadge" hidden></span></button></div>
+    <div id="designPane" role="tabpanel" aria-labelledby="designTab"></div><div id="timingPane" role="tabpanel" aria-labelledby="timingTab" hidden></div>
+    <section id="segmentsEditor" class="segments-editor" hidden aria-label="תזמון בתים ופזמונים">
+     <h2>כל קטע, בזמן שלכם</h2><p class="instruction">גררו את הבתים והפזמונים בציר הזמן שמתחת לסרטון. הקצוות משנים התחלה וסיום. אפשר גם להזין זמנים כאן.</p><p id="segmentTimecodeHint" class="timecode-hint">דקות:שניות.מאיות · למשל <bdi dir="ltr">03:26.16</bdi></p>
+     <details class="disclosure"><summary>שינוי החלוקה לבתים ופזמונים</summary><div class="details-body"><label for="segmentLayout">שורה ריקה מפרידה בין קטעים. ירידת שורה רגילה נשארת בתוך הקטע.</label><textarea id="segmentLayout" rows="12" dir="rtl" spellcheck="false"></textarea><p class="instruction">אפשר לשנות את החלוקה בלי לשנות או להשמיט מילים.</p><button id="applySegmentLayout" class="secondary">עדכון החלוקה</button></div></details>
+     <p id="segmentsError" class="field-error" role="alert" hidden></p><div id="segmentCards"></div><div class="segment-save"><span id="segmentSaveStatus" role="status">נשמר במחשב</span><button id="saveSegments" class="secondary">שמירת התזמון</button></div>
+    </section>
+    <div id="reviewNotice" class="review-notice" role="status"></div>
+    <section class="voice-check" aria-label="בדיקת המילים מול הקול"><div><strong>כל מילה, בזמן שלה</strong><p id="verificationStatus">התאמה של התמליל לקול, בקטעים קצרים.</p></div><button id="verifyButton" class="secondary">שיפור תזמון אוטומטי</button><small>גם בשירה: מבודדים את הקול במקטעים קשים ובודקים את התזמון שוב. המילים והסרטון המקורי נשמרים. השלמת רווחים מאריכה את התצוגה בלבד.</small><label class="check-label"><input id="resolveManualConflicts" type="checkbox">לתקן גם תזמון ידני שמתנגש בשירה — עם גיבוי</label></section>
+    <div id="exportOptions" class="export-options"><label for="exportResolution">רזולוציית הסרטון</label><select id="exportResolution" aria-describedby="exportResolutionInfo"><option value="source">כמו המקור</option><option value="720">720p · HD</option><option value="1080">1080p · Full HD</option><option value="1440">1440p · QHD</option><option value="2160">2160p · 4K</option></select><small id="exportResolutionInfo" role="status"></small></div>
+    <div class="download-action"><button id="exportButton" class="primary large full-width" disabled><svg><use href="#i-download"/></svg>הכנת הסרטון להורדה</button><p id="exportHint">הסרטון יישמר עם הכתוביות. בלי סימן מים.</p></div>
+    <div id="downloadBanner" class="download-banner" hidden><span class="success-icon"><svg><use href="#i-check"/></svg></span><h2>זהו, הסרטון מוכן!</h2><p>מורידים למחשב, ומשם אפשר להעלות לאינסטגרם, לטיקטוק או לשלוח בוואטסאפ.</p><a id="downloadLink" class="primary large full-width" download><svg><use href="#i-download"/></svg>הורדת הסרטון</a><small>קובץ MP4 · עם הכתוביות ועם הקול המקורי</small><p id="downloadHelp" hidden>הקובץ נמצא בהורדות של הדפדפן. בדרך כלל הוא נשמר בתיקיית ״הורדות״ במחשב.</p></div>
+    <details id="designOptions" class="disclosure design-options"><summary>שינוי מראה הכתוביות (לא חובה)</summary>
+    <section class="style-panel" aria-labelledby="styleTitle">
+     <div class="section-heading"><div><span class="panel-kicker">הטאץ׳ שלכם</span><h2 id="styleTitle">תנו למילים אופי.</h2></div><span class="muted">4 סגנונות חיים</span></div>
+      <div id="wordCountControls" class="setting-group"><span class="setting-label">כמה מילים רואים בכל פעם?</span><div class="segmented" role="group" aria-label="מילים בשורה"><button data-words="1">1</button><button data-words="2">2</button><button data-words="3">3</button><button data-words="4" class="selected">4</button><button data-words="5">5</button><button data-words="6">6</button></div></div>
+     <label id="wordAnimationControl" class="check-label"><input id="wordAnimation" type="checkbox" checked>זום והדגשה של כל מילה</label>
+     <div class="presets" role="group" aria-label="סגנון הכתוביות">
+      <button class="preset selected" data-style="zoom" aria-pressed="true" aria-label="קפיצה רכה — מומלץ"><span class="motion-demo" data-demo="zoom" aria-hidden="true"></span><strong>קפיצה רכה</strong><small>גדילה עדינה שנרגעת עם המילה</small><span class="preset-badge">מומלץ</span></button>
+      <button class="preset" data-style="pop" aria-pressed="false" aria-label="קפיצה קצבית"><span class="motion-demo" data-demo="pop" aria-hidden="true"></span><strong>קפיצה קצבית</strong><small>תנועה קפיצית, עם יותר אנרגיה</small></button>
+      <button class="preset" data-style="karaoke" aria-pressed="false" aria-label="צבע זורם"><span class="motion-demo" data-demo="karaoke" aria-hidden="true"></span><strong>צבע זורם</strong><small>הצבע מתקדם לאורך המילים</small></button>
+      <button class="preset" data-style="float" aria-pressed="false" aria-label="כניסה חלקה"><span class="motion-demo" data-demo="float" aria-hidden="true"></span><strong>כניסה חלקה</strong><small>תנועה נקייה, בלי קפיצות בגודל</small></button>
+     </div>
+     <div class="motion-actions"><button id="toggleDemos" class="text-button" aria-pressed="false">עצירת הדוגמאות</button><button id="previewMotion" class="secondary"><svg><use href="#i-play"/></svg>נסו על הסרטון שלי</button></div>
+     <p class="motion-hint">כל דוגמה מציגה את התנועה. לחצו על הסגנון שאתם אוהבים.</p>
+     <div class="setting-group"><span class="setting-label">הלוק של הכתוביות</span><div class="look-presets" role="group" aria-label="מראה הכתוביות"><button data-look="clean"><span>מילה.</span>נקי</button><button data-look="card"><span>מילה.</span>כרטיס</button><button data-look="bold"><span>מילה.</span>בולט</button></div></div>
+     <div class="direct-edit-note"><strong>העיצוב בידיים שלכם</strong><p>גררו את המסגרת להזזה, את הפינות לגודל ואת הידית העגולה לסיבוב. העיצוב חל על כל הכתוביות. אפשר לבטל כל שינוי.</p><div class="motion-actions"><button id="undoStyle" class="text-button" disabled>ביטול השינוי</button><button id="redoStyle" class="text-button" disabled>החזרת השינוי</button></div></div>
+     <div class="motion-controls"><div class="setting-group"><label class="setting-label" for="motionStrength">עוצמת התנועה <output id="motionStrengthValue">100%</output></label><input id="motionStrength" type="range" min="0" max="2" step=".05" value="1"></div><div class="setting-group"><label class="setting-label" for="motionSpeed">מהירות האנימציה <output id="motionSpeedValue">רגילה</output></label><input id="motionSpeed" type="range" min=".5" max="2" step=".05" value="1"></div></div>
+     <div class="setting-group"><span class="setting-label">צבע המילה שמדברים עכשיו</span><div class="swatches" role="group" aria-label="צבע הכתוביות"><button data-color="#D4F76B" class="swatch selected" aria-pressed="true"><i style="--swatch:#D4F76B"></i>ירוק</button><button data-color="#FFD54A" class="swatch" aria-pressed="false"><i style="--swatch:#FFD54A"></i>צהוב</button><button data-color="#FFFFFF" class="swatch" aria-pressed="false"><i style="--swatch:#FFFFFF"></i>לבן</button><button data-color="#70DCE2" class="swatch" aria-pressed="false"><i style="--swatch:#70DCE2"></i>תכלת</button></div></div>
+     <div class="setting-group"><span class="setting-label">גודל הכתוביות</span><div class="segmented" role="group" aria-label="גודל הכתוביות"><button data-size="80">קטן</button><button data-size="110" class="selected">רגיל</button><button data-size="150">גדול</button></div></div>
+     <details id="styleDetails" class="disclosure"><summary>עוד אפשרויות עיצוב</summary><div class="details-body">
+      <div class="setting-group"><label class="setting-label" for="fontSize">גודל מדויק <output id="fontSizeValue">110</output></label><input id="fontSize" type="range" min="40" max="200" value="110"></div>
+      <div class="setting-group"><div class="setting-label"><label for="customColor">צבע אחר</label><span id="colorHex" dir="ltr"></span></div><input id="customColor" type="color" value="#d4f76b"></div>
+      <div class="setting-group"><label class="setting-label" for="textColor">צבע שאר המילים</label><input id="textColor" type="color" value="#ffffff"></div>
+      <div class="setting-group"><label class="setting-label" for="backdropOpacity">כהות הרקע המעוגל <output id="backdropValue">ללא רקע</output></label><input id="backdropOpacity" type="range" min="0" max=".9" step=".01" value="0"></div>
+      <div class="setting-group"><label class="setting-label" for="rotation">סיבוב הכתוביות <output id="rotationValue">0°</output></label><input id="rotation" type="range" min="-45" max="45" step="1" value="0"></div>
+      <div class="setting-group"><label class="setting-label" for="positionX">מיקום לרוחב <output id="positionXValue">50%</output></label><input id="positionX" type="range" min=".04" max=".96" step=".01" value=".5" dir="ltr"></div>
+      <div class="setting-group"><label class="setting-label" for="positionY">מיקום לגובה <output id="positionYValue">70%</output></label><input id="positionY" type="range" min=".04" max=".96" step=".01" value=".7" dir="ltr"></div>
+
+      <div class="setting-group"><span class="setting-label">מיקום הכתוביות</span><div class="segmented" role="group" aria-label="מיקום הכתוביות"><button data-position=".32">למעלה</button><button data-position=".5">באמצע</button><button data-position=".7" class="selected">למטה</button></div></div>
+      <label class="check-label"><input id="outline" type="checkbox" checked>מסגרת כהה לאותיות, לקריאה על רקע בהיר</label><button id="resetStyle" class="text-button">חזרה לעיצוב המומלץ</button>
+     </div></details>
+    </section>
+    </details>
+    <details id="timingDetails" class="disclosure timing-details"><summary id="timingSummary">מילה מופיעה בזמן הלא נכון?</summary><div class="details-body">
+     <p class="instruction">לחצו על המילה שרוצים לתקן. אפשר להיעזר בניגון איטי של הסרטון.</p><div id="wordChips" class="word-chips" aria-label="בחירת מילה לתיקון"></div>
+     <div class="timing-card" id="timingCard" hidden><div class="timing-heading"><span>המילה שבחרתם: <strong id="selectedWord" dir="auto"></strong></span><button id="auditionWord" class="text-button"><svg><use href="#i-play"/></svg>שמיעת המילה</button></div>
+      <p id="timingReason" class="instruction"></p>
+      <div class="word-focus"><div class="focus-heading"><span>דיוק מול גל הקול</span><span id="focusTime" dir="ltr"></span></div><div id="wordWave" class="word-wave" dir="ltr"><svg id="focusWave" viewBox="0 0 600 64" preserveAspectRatio="none" aria-hidden="true"></svg><div id="focusRange" class="focus-range"></div><button id="focusStart" class="time-handle start" aria-label="גרירת תחילת המילה">‹</button><button id="focusEnd" class="time-handle end" aria-label="גרירת סיום המילה">›</button><div id="focusPlayhead" class="focus-playhead"></div></div><p>גררו את הקצוות כדי לדייק. החצים במקלדת מזיזים מאית שנייה.</p><div class="timing-nudge"><button id="nudgeEarlier" class="secondary">50 אלפיות קודם</button><button id="nudgeLater" class="secondary">50 אלפיות אחר כך</button></div></div>
+      <button id="useSuggested" class="secondary full-width" hidden>ניסיון התזמון שהבדיקה מציעה</button>
+      <ol class="timing-steps"><li>נגנו ועצרו ברגע שהמילה <b>מתחילה</b>.<button id="setStart" class="secondary full-width">המילה מתחילה כאן <span id="capturedStart" dir="ltr">—</span></button></li><li>המשיכו ועצרו ברגע שהמילה <b>נגמרת</b>.<button id="setEnd" class="secondary full-width">המילה נגמרת כאן <span id="capturedEnd" dir="ltr">—</span></button></li></ol>
+      <details class="precise-timing"><summary>הזנת זמן מדויק והעתקה</summary><p id="wordTimecodeHint" class="timecode-hint">דקות:שניות.מאיות · למשל <bdi dir="ltr">03:26.16</bdi></p><div class="time-inputs"><div><label for="wordStart">תחילת המילה</label><div class="timecode-field"><input id="wordStart" data-timecode type="text" placeholder="00:00.00" dir="ltr" aria-describedby="wordTimecodeHint" spellcheck="false" autocomplete="off"><button class="timecode-copy" data-copy-time="wordStart" aria-label="העתקת תחילת המילה" title="העתקת זמן ההתחלה">⧉</button></div></div><div><label for="wordEnd">סיום המילה</label><div class="timecode-field"><input id="wordEnd" data-timecode type="text" placeholder="00:00.00" dir="ltr" aria-describedby="wordTimecodeHint" spellcheck="false" autocomplete="off"><button class="timecode-copy" data-copy-time="wordEnd" aria-label="העתקת סיום המילה" title="העתקת זמן הסיום">⧉</button></div></div></div></details>
+      <label class="check-label listen-confirm"><input id="listenedWord" type="checkbox">סימון אישי: הקשבתי למילה (לא חובה)</label><p id="timingError" class="field-error" role="alert" hidden></p><button id="saveTiming" class="primary full-width">שמירת התיקון</button><button id="discardTiming" class="text-button" hidden>ביטול התיקון וחזרה לתזמון השמור</button>
+     </div><button id="nextUnaligned" class="text-button" hidden>למילה הבאה עם תזמון משוער <span aria-hidden="true">←</span></button>
+    </div></details>
+    <div class="text-review"><button id="editTranscript" class="text-button"><svg><use href="#i-file"/></svg>רוצים לשנות את הטקסט?</button></div>
+
+   </div>
+   <div id="jobBanner" class="job-banner" role="status" hidden><div class="spinner"></div><strong id="jobTitle"></strong><p id="jobDetail"></p><div class="job-progress"><span id="jobProgress"></span></div><small>אפשר להשאיר את החלון פתוח. נעדכן כאן כשנסיים.</small></div>
+  </section>
+  <section class="preview-panel card" aria-label="בדיקת הסרטון"><div class="preview-heading"><div class="preview-title"><span class="live-dot"></span><h2>התצוגה שלכם</h2><span class="canvas-tag">תצוגה חיה</span></div><div class="canvas-tools"><button id="guidesButton" class="icon-button" aria-label="הצגת קווי עזר" title="קווי עזר למיקום" aria-pressed="false"><svg><use href="#i-frame"/></svg></button><span id="aspectLabel" class="muted" dir="ltr"></span><button id="expandCanvas" class="expand-canvas" aria-label="הגדלת משטח העריכה" title="עריכה בתצוגה גדולה"><span aria-hidden="true">⛶</span> תצוגה גדולה</button><button id="closeCanvas" class="icon-button" aria-label="חזרה לסטודיו" hidden>×</button></div></div>
+   <div class="stage" id="dropStage"><div class="video-shell" id="videoShell"><video id="video" playsinline preload="metadata"></video><div id="captionBackdrop" class="caption-backdrop" aria-hidden="true" hidden></div><div id="caption" class="caption" aria-hidden="true"></div><div id="captionBox" class="caption-box" tabindex="0" role="group" aria-label="הזזת הכתוביות בגרירה או באמצעות החצים" hidden><span class="drag-label">גררו להזזה · הפינות משנות גודל</span><button id="resizeCaption" class="resize-caption corner-se" aria-label="שינוי גודל בגרירה, או במקשי פלוס ומינוס">↗</button><button class="resize-caption corner-sw" aria-label="שינוי גודל מהפינה השמאלית התחתונה"></button><button class="resize-caption corner-ne" aria-label="שינוי גודל מהפינה הימנית העליונה"></button><button class="resize-caption corner-nw" aria-label="שינוי גודל מהפינה השמאלית העליונה"></button><button id="rotateCaption" class="rotate-caption" aria-label="סיבוב בגרירה, או בחצי המקלדת">↻</button></div><div class="snap-guide vertical" id="snapX" hidden></div><div class="snap-guide horizontal" id="snapY" hidden></div><div class="video-loading" id="videoLoading" hidden><div class="spinner"></div><span>פותחים את הסרטון…</span></div></div></div>
+   <div id="canvasEditBar" class="canvas-edit-bar" role="toolbar" aria-label="עריכת הכתוביות על הסרטון" hidden><span class="edit-bar-label">על הסרטון</span><button id="canvasSmaller" aria-label="הקטנת הכתוביות" title="הקטנה">A−</button><button id="canvasLarger" aria-label="הגדלת הכתוביות" title="הגדלה">A+</button><button id="canvasCenter" title="מרכוז ויישור" aria-label="מרכוז ויישור הכתוביות">⊹</button><button id="canvasUndo" title="ביטול שינוי" aria-label="ביטול שינוי מהסרטון">↶</button><span class="edit-bar-divider"></span><button id="canvasWord" class="canvas-word">לתזמון המילה</button></div>
+   <div class="transport"><div class="playback-main"><button id="playButton" class="secondary" aria-label="ניגון הסרטון" aria-keyshortcuts="Space" title="ניגון / עצירה · מקש רווח"><svg><use href="#i-play"/></svg><span id="playLabel">ניגון הסרטון</span></button><button id="muteButton" class="icon-button" aria-label="השתקה"><svg><use href="#i-volume"/></svg></button><select id="speed" aria-label="מהירות הסרטון"><option value="1" selected>מהירות רגילה</option><option value=".75">ניגון איטי</option><option value=".5">ניגון איטי מאוד</option></select></div><div class="playback-shortcuts" aria-label="דילוג בזמן וביטול שינויים">
+ <div class="history-buttons"><button id="undoEdit" type="button" aria-label="ביטול הפעולה האחרונה" aria-keyshortcuts="Control+z Meta+z" title="ביטול הפעולה האחרונה · Ctrl+Z" disabled>↶ ביטול</button><button id="redoEdit" type="button" aria-label="החזרת הפעולה האחרונה" aria-keyshortcuts="Control+y Control+Shift+z Meta+Shift+z" title="החזרת הפעולה האחרונה · Ctrl+Y" disabled>↷ החזרה</button></div>
+ <div class="seek-buttons" dir="ltr" aria-label="דילוג בשניות"><button type="button" data-seek="-1" aria-label="שנייה אחורה">−1s</button><button type="button" data-seek="-.1" aria-label="עשירית שנייה אחורה">−0.1s</button><button type="button" data-seek=".1" aria-label="עשירית שנייה קדימה">+0.1s</button><button type="button" data-seek="1" aria-label="שנייה קדימה">+1s</button></div>
+ <button id="shortcutHelp" type="button" title="כל קיצורי המקלדת">קיצורים ⌨</button>
+ </div><div class="seek-row" dir="ltr"><button id="currentTime" class="current-time-copy" type="button" aria-label="העתקת הזמן הנוכחי" title="לחיצה להעתקת הזמן הנוכחי">00:00.00</button><input id="seek" type="range" min="0" max="1" step=".01" value="0" aria-label="מיקום בסרטון"><span id="totalTime">00:00.0</span></div></div>
+   <div class="preview-footnote"><span id="previewHint">אפשר להאזין לסרטון בזמן שמוסיפים את הטקסט.</span><button id="frameButton" class="text-button" disabled><svg><use href="#i-frame"/></svg>בדיקת התוצאה הסופית</button></div>
+  </section>
+ </div>
+ <section id="passageTimeline" class="passage-timeline" aria-label="ציר הזמן של הבתים והפזמונים" hidden>
+  <div class="passage-toolbar"><div class="passage-title"><span class="live-dot"></span><h2>הקצב בידיים שלכם</h2><span id="passageSelection"></span></div><div class="passage-tools"><button id="passageUndo" class="text-button" disabled title="ביטול השינוי האחרון, כולל פיצול וחיבור">ביטול שינוי ↶</button><button id="passageRedo" class="text-button" disabled title="החזרת השינוי · Ctrl+Y">החזרה ↷</button><button id="passageFocus" class="text-button">הגדלת הקטע</button><button id="passageFit" class="text-button">כל הסרטון</button><label for="passageZoom">זום<input id="passageZoom" type="range" min="1" max="24" step=".1" value="1" dir="ltr" aria-label="הגדלת ציר הזמן של הקטעים"></label></div></div>
+  <div class="passage-actions" role="toolbar" aria-label="פיצול וחיבור קטעים"><button id="passageSplit" class="secondary" aria-label="פיצול בנקודת הניגון">✂ פיצול כאן <bdi id="passageCutTime" dir="ltr"></bdi></button><button id="passageMergePrevious" class="text-button">חיבור לקודם</button><button id="passageMergeNext" class="text-button">חיבור לבא</button><span id="passageActionHint">בוחרים רגע בסרטון, ואז מפצלים.</span></div>
+  <div id="passageScroll" class="passage-scroll" dir="ltr"><div id="passageCanvas" class="passage-canvas"><div id="passageRuler" class="passage-ruler" aria-hidden="true"></div><svg id="passageWave" class="passage-wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"></svg><div id="passageTrack" class="passage-track" role="group" aria-label="גרירת קטעים ותזמון"></div><div id="passagePlayhead" class="passage-playhead"><span></span></div></div></div>
+  <div class="passage-footer"><span>גררו קטע להזזה · קצוות להתחלה ולסיום · חצים לדיוק</span><span id="passageStatus" role="status">השינוי מופיע מיד בסרטון ונשמר אוטומטית</span></div>
+ </section>
+ <section id="timelineDetails" class="passage-timeline word-timeline" aria-label="ציר הזמן של המילים" hidden>
+  <div class="passage-toolbar"><div class="passage-title"><span class="live-dot"></span><h2>כל מילה, בזמן שלכם</h2><span id="wordSelection">בחרו מילים על הציר</span></div><div class="passage-tools"><button id="wordUndo" class="text-button" disabled>ביטול ↶</button><button id="wordRedo" class="text-button" disabled>החזרה ↷</button><button id="wordCloseGaps" class="text-button" title="הארכת כל מילה עד תחילת הבאה, בלי לשנות את המילים">השלמת רווחים</button><button id="wordFocus" class="text-button">הגדלת הבחירה</button><button id="wordFit" class="text-button">כל הסרטון</button><label>זום<input id="timelineZoom" type="range" min="1" max="120" step=".1" value="1" dir="ltr" aria-label="הגדלת ציר הזמן של המילים"></label></div></div>
+  <div class="word-selection-bar"><div class="word-selection-modes" role="group" aria-label="אופן בחירת מילים"><button type="button" data-word-select="single" aria-pressed="true">מילה אחת</button><button type="button" data-word-select="multiple" aria-pressed="false">כמה מילים</button><button type="button" data-word-select="tail" aria-pressed="false">מכאן עד הסוף</button><button type="button" data-word-select="range" aria-pressed="false">טווח מילים</button></div><label class="word-collision-label">כשמילים נפגשות<select id="wordCollision" aria-label="התנהגות במפגש בין מילים"><option value="borrow" selected>לוקחים זמן מהמילה הסמוכה</option><option value="swap">מחליפים את הזמנים</option></select></label><span id="timingStatus"></span></div>
+  <div id="wordRangeControls" class="word-range-controls" hidden><label>ממילה<select id="wordRangeFrom" aria-label="המילה הראשונה בטווח"></select></label><label>עד מילה<select id="wordRangeTo" aria-label="המילה האחרונה בטווח"></select></label><span>כל המילים שביניהן יזוזו יחד</span></div>
+  <div class="passage-scroll" id="timelineScroll" dir="ltr"><div class="passage-canvas" id="timelineCanvas"><div class="passage-ruler" id="ruler" aria-hidden="true"></div><svg class="passage-wave" id="waveform" preserveAspectRatio="none" viewBox="0 0 1200 48" aria-hidden="true"></svg><div class="passage-track" id="wordTrack" role="group" aria-label="גרירת מילים ותזמון"></div><div class="passage-playhead" id="playhead"><span></span></div><p id="timelineEmpty" hidden></p></div></div>
+  <div id="wordScrollBar" class="word-scroll-bar" aria-label="גלילה אופקית בין המילים">
+   <div class="word-scroll-heading"><label for="wordScrollPosition">גלילה בין המילים</label><output id="wordScrollWindow" dir="ltr" aria-label="טווח הזמן המוצג"></output></div>
+   <div class="word-scroll-controls" dir="ltr"><button id="wordScrollLeft" type="button" aria-label="גלילת המילים שמאלה לזמן מוקדם יותר" title="שמאלה · מילים מוקדמות יותר">←</button><input id="wordScrollPosition" type="range" min="0" max="1" step="any" value="0" dir="ltr" aria-label="גלילה לאורך המילים" aria-controls="timelineScroll"><button id="wordScrollRight" type="button" aria-label="גלילת המילים ימינה לזמן מאוחר יותר" title="ימינה · מילים מאוחרות יותר">→</button></div>
+  </div>
+  <div class="passage-footer"><span id="wordTimelineStatus" role="status"></span><span>רווחים נסגרים אוטומטית · Ctrl+Z ביטול · Ctrl+Y החזרה · Alt + חץ לדיוק של מאית</span></div>
+ </section>
+ <div class="trust-note"><svg><use href="#i-lock"/></svg><span>נוצר בעברית. נשאר אצלכם. חינם, בלי הרשמה ובלי סימן מים.</span></div>
+</main>
+<footer class="statusbar"><span id="bottomStatus">מתאים לסרטונים בעברית</span><span id="projectTitle" dir="auto"></span><span id="savedStatus">מקומי ופרטי</span></footer>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="systemDialog" aria-labelledby="systemTitle">
+ <div class="dialog-heading"><h2 id="systemTitle">מתכוננים לסרטון הראשון</h2><button class="icon-button close-dialog" aria-label="סגירה">×</button></div>
+ <p>נבחר מודל שמתאים למחשב ונוריד את הרכיבים לעברית. בהורדה הראשונה נדרשים אינטרנט ומספר ג׳יגה־בייט פנויים. הסרטונים והתמלילים לא נשלחים לשירות ענן.</p>
+ <ul id="systemChecks" class="system-checks"></ul><progress id="systemProgress" class="system-progress" hidden aria-label="הכנת המחשב"></progress><p id="systemStatus" role="status"></p>
+ <details><summary>רכיב נוסף לשירה — לשימוש לא מסחרי</summary><p><label><input id="noncommercialModels" type="checkbox"> לאפשר שימוש ב־MMS להתאמה פונטית, גם אם הוא כבר מותקן. אני משתמש/ת ביישום לשימוש לא מסחרי.</label></p><p class="connect-note">משקלי MMS כפופים לרישיון CC-BY-NC 4.0. הרכיב אינו נדרש לעריכה ולייצוא הרגילים. <a href="https://docs.pytorch.org/audio/stable/generated/torchaudio.pipelines.MMS_FA.html" target="_blank" rel="noopener noreferrer">מידע על הרישיון</a></p></details>
+ <button id="systemPrepare" class="primary">הכנת המחשב לעבודה</button>
+ <p class="connect-note">אפשר לנסות את סרטון הדוגמה גם לפני הורדת המודלים. בשירה עם מוזיקה או מילים לא ברורות ייתכנו תזמונים שדורשים בדיקה; היישום מציג חוסר ודאות.</p>
+</dialog>
+<dialog id="canvasDialog" aria-label="עריכת כתוביות בתצוגה גדולה"></dialog>
+<dialog id="passageSplitDialog" class="passage-split-dialog" aria-labelledby="passageSplitTitle">
+ <div class="dialog-heading"><h2 id="passageSplitTitle">פיצול הקטע</h2><button class="icon-button close-dialog" aria-label="סגירת הפיצול">×</button></div>
+ <p class="split-intro">זמן הפיצול: <bdi id="passageSplitAt" dir="ltr"></bdi>. כל מילה תופיע בחלק אחד, באותו הסדר.</p>
+ <label for="passageSplitWord">המילה הראשונה בחלק השני</label><select id="passageSplitWord" dir="rtl"></select><p id="passageSplitSuggestion" class="instruction"></p>
+ <div class="split-previews"><section><h3>חלק ראשון <bdi id="passageSplitLeftTime" dir="ltr"></bdi></h3><p id="passageSplitLeft" dir="auto"></p></section><section><h3>חלק שני <bdi id="passageSplitRightTime" dir="ltr"></bdi></h3><p id="passageSplitRight" dir="auto"></p></section></div>
+ <div class="split-dialog-actions"><button id="passageSplitConfirm" class="primary">פיצול לשני קטעים</button><button class="text-button close-dialog">ביטול</button></div>
+</dialog>
+<dialog id="frameDialog" class="frame-dialog"><div class="dialog-heading"><h2>כך זה ייראה בסרטון</h2><button class="icon-button close-dialog" aria-label="סגירה"><svg><use href="#i-close"/></svg></button></div><div class="frame-image-wrap"><img id="frameImage" alt="תמונה מהסרטון עם הכתוביות הסופיות"></div><p>זאת התמונה בנקודה שבה עצרתם את הסרטון, כפי שתופיע בקובץ המוכן.</p></dialog>
+<dialog id="historyDialog"><div class="dialog-heading"><h2>הסרטונים שלי</h2><button class="icon-button close-dialog" aria-label="סגירה"><svg><use href="#i-close"/></svg></button></div><p class="muted">הסרטונים נשמרים במחשב הזה. בוחרים סרטון כדי להמשיך.</p><div id="projectList" class="project-list"></div></dialog>
+<dialog id="shortcutsDialog" aria-labelledby="shortcutsTitle"><div class="dialog-heading"><h2 id="shortcutsTitle">המקלדת עובדת בשבילכם</h2><button class="icon-button close-dialog" aria-label="סגירה">×</button></div>
+ <p>הקיצורים עובדים גם כשהמקלדת בעברית. בזמן הקלדה, קיצורי העריכה שייכים לשדה הטקסט.</p>
+ <dl class="shortcut-list"><div><dt>ביטול הפעולה האחרונה</dt><dd><kbd>Ctrl + Z</kbd></dd></div><div><dt>החזרת הפעולה שבוטלה</dt><dd><kbd>Ctrl + Y</kbd> / <kbd>Ctrl + Shift + Z</kbd></dd></div><div><dt>ניגון / עצירה</dt><dd><kbd>Space</kbd> / <kbd>K</kbd></dd></div><div><dt>דילוג אחורה / קדימה בחצי שנייה</dt><dd><kbd>←</kbd> / <kbd>→</kbd></dd></div><div><dt>דילוג של 5 שניות</dt><dd><kbd>J</kbd> / <kbd>L</kbd> או <kbd>Shift + ← / →</kbd></dd></div><div><dt>דילוג של מאית שנייה</dt><dd><kbd>Alt + ← / →</kbd></dd></div><div><dt>תחילת / סוף הסרטון</dt><dd><kbd>Home</kbd> / <kbd>End</kbd></dd></div><div><dt>המילה הקודמת / הבאה</dt><dd><kbd>Page Up</kbd> / <kbd>Page Down</kbd></dd></div><div><dt>על מילה או קצה בטיימליין: הזזה בעשירית שנייה</dt><dd><kbd>←</kbd> / <kbd>→</kbd></dd></div><div><dt>על הטיימליין: דיוק במאית / בשנייה</dt><dd><kbd>Alt + ← / →</kbd> / <kbd>Shift + ← / →</kbd></dd></div><div><dt>ביטול גרירה פעילה</dt><dd><kbd>Esc</kbd></dd></div><div><dt>בחירה מרובה / טווח מילים</dt><dd><kbd>Ctrl + click</kbd> / <kbd>Shift + click</kbd></dd></div></dl>
+ <p class="muted">על הסרטון החצים מזיזים את הכתוביות. במק משתמשים ב־⌘ במקום Ctrl.</p></dialog>
+<dialog id="helpDialog"><div class="dialog-heading"><h2>איך מוסיפים כתוביות?</h2><button class="icon-button close-dialog" aria-label="סגירה"><svg><use href="#i-close"/></svg></button></div><ol class="help-steps"><li><b>בוחרים סרטון מהמחשב.</b><p>לוחצים על ״בחירת סרטון מהמחשב״ ובוחרים את הסרטון שרוצים.</p></li><li><b>מוסיפים את המילים.</b><p>מדביקים את מה שנאמר בסרטון ולוחצים על ״יצירת כתוביות״. אין טקסט? בוחרים ״אין לי טקסט״ כדי שניצור אותו מהדיבור בעברית.</p></li><li><b>בודקים ומורידים.</b><p>מנגנים את הסרטון. אם הכול נראה טוב, לוחצים על ״הכנת הסרטון להורדה״ ואז על ״הורדת הסרטון״.</p></li></ol><details class="disclosure"><summary>מילה לא מופיעה בזמן הנכון?</summary><p>פותחים את ״מילה מופיעה בזמן הלא נכון?״ ובוחרים אותה. עוצרים בסרטון בתחילת המילה ולוחצים על ״המילה מתחילה כאן״, ואז עושים אותו דבר בסיום המילה ושומרים.</p></details><p class="muted">בפעם הראשונה ייתכן שנצטרך להוריד רכיב לזיהוי הדיבור. זה עשוי לקחת כמה דקות. הסרטון שלכם לא נשלח לאף שירות.</p></dialog>
+</body></html>
