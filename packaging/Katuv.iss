@@ -54,6 +54,10 @@ Type: files; Name: "{app}\Start-Katuv.ps1"
 Type: files; Name: "{app}\Katuv.Common.ps1"
 Type: files; Name: "{app}\Uninstall-Katuv.ps1"
 
+[Icons]
+Name: "{userdesktop}\כתוב"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy RemoteSigned -WindowStyle Hidden -File ""{app}\Start-Katuv.ps1"""; WorkingDir: "{app}"
+Name: "{userprograms}\כתוב"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy RemoteSigned -WindowStyle Hidden -File ""{app}\Start-Katuv.ps1"""; WorkingDir: "{app}"
+
 [Run]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy RemoteSigned -WindowStyle Hidden -File ""{app}\Start-Katuv.ps1"""; Description: "פתיחת כתוב"; Flags: postinstall nowait skipifsilent
 
@@ -96,7 +100,7 @@ begin
   ExtractTemporaryFiles('{tmp}\katuv-payload\*');
   PowerShell := ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe');
   Params := '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{tmp}\katuv-payload\Install-Katuv.ps1') +
-    '" -InstallRoot "' + ExpandConstant('{app}') + '" -NoLaunch';
+    '" -InstallRoot "' + ExpandConstant('{app}') + '" -NoLaunch -NoShortcuts';
   PreparationPage.Show;
   try
     if not ExecAndLogOutput(PowerShell, Params, '', SW_SHOWNORMAL, ewWaitUntilTerminated, ExitCode, @InstallationOutput) or (ExitCode <> 0) then begin

@@ -168,6 +168,26 @@ def test_preparation_network_and_disk_errors_are_actionable():
     assert 'מקום פנוי' in preparation_error(OSError(errno.ENOSPC, 'disk full'))
 
 
+def test_download_retries_temporary_service_failure_then_checks_hash(tmp_path, monkeypatch):
+    from autocaption.bootstrap import download
+    import hashlib
+    calls = []
+    payload = b'validated component'
+    def request(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            raise urllib.error.HTTPError('https://example.invalid/component', 503, 'Unavailable', {}, None)
+        response = io.BytesIO(payload)
+        response.headers = {'Content-Length': str(len(payload))}
+        return response
+    monkeypatch.setattr('urllib.request.urlopen', request)
+    monkeypatch.setattr('autocaption.bootstrap.time.sleep', lambda _: None)
+    target = tmp_path/'component.zip'
+    download('https://example.invalid/component', target, hashlib.sha256(payload).hexdigest())
+    assert len(calls) == 2 and target.read_bytes() == payload
+    assert not target.with_suffix('.part').exists()
+
+
 def test_python_launcher_rejects_another_installation(monkeypatch, tmp_path):
     import sys
     from autocaption.web import main

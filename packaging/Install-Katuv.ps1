@@ -83,6 +83,7 @@ try {
     if (-not $NoShortcuts) {
         $shell = New-Object -ComObject WScript.Shell
         foreach ($folder in @([Environment]::GetFolderPath('Desktop'), [Environment]::GetFolderPath('Programs'))) {
+            [IO.Directory]::CreateDirectory($folder) | Out-Null
             $shortcut = $shell.CreateShortcut((Join-Path $folder 'כתוב.lnk'))
             $shortcut.TargetPath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
             $shortcut.Arguments = '-NoProfile -ExecutionPolicy RemoteSigned -WindowStyle Hidden -File "' + (Join-Path $InstallRoot 'Start-Katuv.ps1') + '"'

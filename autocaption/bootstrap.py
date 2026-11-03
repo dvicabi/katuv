@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
+import http.client
 import urllib.request
 import urllib.error
 import zipfile
@@ -27,6 +29,20 @@ def preparation_error(error):
 
 
 def download(url, destination, expected_sha256, progress=None):
+    # A brief CDN outage must not fail an otherwise valid first installation.
+    for attempt in range(3):
+        try:
+            return _download_once(url, destination, expected_sha256, progress)
+        except urllib.error.HTTPError as error:
+            if error.code not in (408, 429, 500, 502, 503, 504) or attempt == 2:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead):
+            if attempt == 2:
+                raise
+        time.sleep(2 ** attempt)
+
+
+def _download_once(url, destination, expected_sha256, progress=None):
     destination = Path(destination)
     staged = destination.with_suffix('.part')
     digest = hashlib.sha256()
