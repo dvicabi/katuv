@@ -66,6 +66,25 @@ def test_bad_package_does_not_modify_active_runtime_or_projects(tmp_path):
     assert len(list(root.glob('runtime-*'))) == 1
 
 
+def test_managed_python_child_belongs_to_its_venv_parent(tmp_path):
+    root, _ = installation(tmp_path)
+    script = root/'process-tree.ps1'
+    script.write_text("""$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Katuv.Common.ps1')
+function Get-CimInstance {
+    [pscustomobject]@{ProcessId=101;ParentProcessId=1;ExecutablePath=(Join-Path $PSScriptRoot 'runtime-1.3.0-a\\Scripts\\python.exe');CommandLine='python -m autocaption.web --port 8771'}
+    [pscustomobject]@{ProcessId=102;ParentProcessId=101;ExecutablePath=(Join-Path $PSScriptRoot 'python\\cpython-3.11\\python.exe');CommandLine='python -m autocaption.web --port 8771'}
+    [pscustomobject]@{ProcessId=103;ParentProcessId=999;ExecutablePath=(Join-Path $PSScriptRoot 'python\\cpython-3.11\\python.exe');CommandLine='python -m autocaption.web --port 8772'}
+}
+$servers = @(Get-KatuvServers $PSScriptRoot)
+if ($servers.Count -ne 3) { throw 'Missing process' }
+if ($servers[0].KatuvRuntimeName -ne 'runtime-1.3.0-a' -or $servers[1].KatuvRuntimeName -ne 'runtime-1.3.0-a') { throw 'Venv ownership lost across Windows Python launcher' }
+if ($servers[2].KatuvRuntimeName) { throw 'Unrelated base Python process attributed to installation' }
+""", encoding='utf-8-sig')
+    result = powershell(script)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_launcher_rejects_foreign_installation_even_when_app_name_matches(tmp_path):
     root, _ = installation(tmp_path)
     class Handler(BaseHTTPRequestHandler):

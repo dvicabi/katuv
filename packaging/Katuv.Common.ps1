@@ -37,11 +37,28 @@ function Get-KatuvRuntime([string]$InstallRoot) {
 }
 
 function Get-KatuvServers([string]$InstallRoot) {
-    $prefix = [IO.Path]::GetFullPath($InstallRoot).TrimEnd('\') + '\'
-    return @(Get-CimInstance Win32_Process | Where-Object {
+    $root = [IO.Path]::GetFullPath($InstallRoot).TrimEnd('\')
+    $prefix = $root + '\'
+    $servers = @(Get-CimInstance Win32_Process | Where-Object {
         $_.ExecutablePath -and $_.ExecutablePath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -and
         $_.CommandLine -match '-m\s+autocaption\.web(?:\s|$)'
     })
+    $runtimes = @{}
+    foreach ($server in $servers) {
+        $scripts = [IO.Path]::GetDirectoryName($server.ExecutablePath)
+        $runtime = [IO.Path]::GetDirectoryName($scripts)
+        if ([IO.Path]::GetFileName($scripts) -eq 'Scripts' -and [IO.Path]::GetDirectoryName($runtime) -eq $root -and [IO.Path]::GetFileName($runtime) -match '^runtime-[0-9]') {
+            $runtimes[[int]$server.ProcessId] = [IO.Path]::GetFileName($runtime)
+        }
+    }
+    foreach ($server in $servers) {
+        $runtimeName = $runtimes[[int]$server.ProcessId]
+        # Windows venv python.exe launches a child from the managed base Python.
+        # Attribute that child to its verified venv parent, never to its own base directory.
+        if (-not $runtimeName) { $runtimeName = $runtimes[[int]$server.ParentProcessId] }
+        $server | Add-Member -NotePropertyName KatuvRuntimeName -NotePropertyValue $runtimeName -Force
+    }
+    return $servers
 }
 
 function Get-KatuvServerUrl($Server) {
@@ -55,13 +72,14 @@ function Assert-KatuvIdle([string]$InstallRoot, [switch]$Maintenance) {
     $entered = @()
     try {
         foreach ($server in $servers) {
+            if (-not $server.KatuvRuntimeName) { throw 'לא ניתן לזהות את סביבת השרת הפתוח. סגרו אותו באופן מסודר ונסו שוב.' }
             $url = Get-KatuvServerUrl $server
             try { $health = Invoke-RestMethod -Uri "$url/api/health" -TimeoutSec 4 }
             catch { throw 'היישום פתוח אך אינו מגיב. סגרו אותו באופן מסודר ונסו שוב; לא הופסק תהליך לא מזוהה.' }
             if ($health.app -ne 'katuv') { throw 'הכתובת משמשת יישום אחר. סגרו את כתוב ונסו שוב.' }
             if ($health.installation_id) {
                 $identity = (Get-Content -LiteralPath (Join-Path $InstallRoot 'installation-id.txt') -Raw -Encoding UTF8).Trim()
-                $runtimeName = Split-Path (Split-Path (Split-Path $server.ExecutablePath)) -Leaf
+                $runtimeName = $server.KatuvRuntimeName
                 if ($health.installation_id -ne $identity -or $health.runtime_id -ne $runtimeName) {
                     throw 'השרת הפתוח שייך להתקנה אחרת. סגרו אותו באופן מסודר ונסו שוב.'
                 }
