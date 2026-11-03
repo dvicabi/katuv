@@ -66,6 +66,21 @@ def test_bad_package_does_not_modify_active_runtime_or_projects(tmp_path):
     assert len(list(root.glob('runtime-*'))) == 1
 
 
+def test_windows_powershell_ignores_incompatible_inherited_module_paths(tmp_path):
+    root, _ = installation(tmp_path)
+    script = root/'modules.ps1'
+    script.write_text("""$ErrorActionPreference = 'Stop'
+$env:PSModulePath = 'C:\\not-a-module-directory'
+Remove-Module Microsoft.PowerShell.Utility -ErrorAction SilentlyContinue
+. (Join-Path $PSScriptRoot 'Katuv.Common.ps1')
+$hash = Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'Katuv.Common.ps1') -Algorithm SHA256
+if ($hash.Hash.Length -ne 64) { throw 'Built-in hashing unavailable' }
+Get-Command Get-CimInstance,Expand-Archive,Get-AuthenticodeSignature -ErrorAction Stop | Out-Null
+""", encoding='utf-8-sig')
+    result = powershell(script)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_managed_python_child_belongs_to_its_venv_parent(tmp_path):
     root, _ = installation(tmp_path)
     script = root/'process-tree.ps1'

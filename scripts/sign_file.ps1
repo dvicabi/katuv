@@ -1,5 +1,6 @@
 ﻿param([Parameter(Mandatory=$true)][string]$Path)
 $ErrorActionPreference = 'Stop'
+if ($PSVersionTable.PSEdition -eq 'Desktop') { $env:PSModulePath = "$PSHOME\Modules" }
 if (-not $env:KATUV_SIGN_CERT_SHA1 -or $env:KATUV_SIGN_CERT_SHA1 -notmatch '^[0-9a-fA-F]{40}$') { throw 'Set KATUV_SIGN_CERT_SHA1 to the validated personal certificate thumbprint.' }
 $tool = $env:KATUV_SIGNTOOL
 if (-not $tool) { $tool = (Get-Command signtool.exe -ErrorAction Stop).Source }

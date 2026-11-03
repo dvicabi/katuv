@@ -5,6 +5,7 @@
     [Parameter(Mandatory=$true)][string]$PublisherThumbprint
 )
 $ErrorActionPreference = 'Stop'
+if ($PSVersionTable.PSEdition -eq 'Desktop') { $env:PSModulePath = "$PSHOME\Modules" }
 if ($PublisherThumbprint -notmatch '^[0-9a-fA-F]{40}$') { throw 'An independently selected publisher certificate thumbprint is required.' }
 if ($Installer -match 'UNSIGNED' -or $Bundle -match 'UNSIGNED') { throw 'Internal unsigned candidates must never be published.' }
 $signature = Get-AuthenticodeSignature -LiteralPath $Installer

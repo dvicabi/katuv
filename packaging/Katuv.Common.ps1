@@ -1,5 +1,9 @@
 ﻿$ErrorActionPreference = 'Stop'
 
+# An installer launched from PowerShell 7 can inherit incompatible module paths.
+# Keep Windows PowerShell 5.1 on its own built-in modules for this process only.
+if ($PSVersionTable.PSEdition -eq 'Desktop') { $env:PSModulePath = "$PSHOME\Modules" }
+
 function Set-KatuvBytes([string]$Path, [byte[]]$Bytes) {
     $temporary = $Path + '.' + [guid]::NewGuid().ToString('N') + '.tmp'
     try {
