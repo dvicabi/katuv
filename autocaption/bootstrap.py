@@ -227,6 +227,10 @@ class Preparation:
 
 
 def main():
+    # Windows redirected consoles otherwise use the machine's legacy code page.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description='הכנת כתוב לשימוש במחשב חדש')
     parser.add_argument('--prepare', action='store_true')
     parser.add_argument('--models', action='store_true')

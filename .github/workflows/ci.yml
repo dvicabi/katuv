@@ -9,6 +9,13 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONUTF8: '1'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:

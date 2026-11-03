@@ -51,6 +51,11 @@ STATIC = Path(__file__).with_name("web_static")
 BUSY = {"aligning", "verifying", "exporting"}
 
 
+def installation_identity(root: Path):
+    return os.environ.get('AUTOCAPTION_INSTALLATION_ID') or hashlib.sha256(
+        str(root.resolve()).casefold().encode('utf-8')).hexdigest()[:32]
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
     style: Literal["pop", "karaoke", "zoom", "float"] = "zoom"
@@ -156,8 +161,7 @@ class Studio:
         self.futures = {}
         self.maintenance = False
         self.preparing = False
-        self.installation_id = os.environ.get('AUTOCAPTION_INSTALLATION_ID') or hashlib.sha256(
-            str(root.resolve()).casefold().encode('utf-8')).hexdigest()[:32]
+        self.installation_id = installation_identity(root)
         # A previous process cannot still own jobs after a server restart.
         for path in root.glob("*/project.json"):
             try:
@@ -195,8 +199,12 @@ class Studio:
             try:
                 records.append(self.read_project(path))
             except (ValueError, OSError):
+                try:
+                    modified = path.stat().st_mtime
+                except OSError:
+                    modified = 0
                 records.append(dict(id=path.parent.name, name='פרויקט שלא ניתן לפתוח',
-                    state='damaged', duration=0, updated=path.stat().st_mtime,
+                    state='damaged', duration=0, updated=modified,
                     message='קובץ הפרויקט פגום. הקבצים המקוריים נשמרו לשחזור.'))
         return sorted(records, key=lambda p: p['updated'], reverse=True)[:30]
 
@@ -829,17 +837,29 @@ def main():
     args = parser.parse_args()
     import urllib.request
     import webbrowser
+    import socket
     url = f"http://127.0.0.1:{args.port}"
+    data_dir = project_dir()
+    running = None
     try:
         with urllib.request.urlopen(url + "/api/health", timeout=1) as response:
-            running = json.load(response).get("app") == "katuv"
-        if running:
-            if args.open:
-                webbrowser.open(url)
-            return
-    except Exception:
+            running = json.load(response)
+    except (OSError, ValueError):
         pass
-    data_dir = project_dir()
+    if running is not None:
+        if not isinstance(running, dict) or any(running.get(key) != value for key, value in {
+                'app': 'katuv', 'app_version': __version__,
+                'installation_id': installation_identity(data_dir), 'runtime_id': Path(sys.prefix).name}.items()):
+            raise SystemExit(f'הפורט {args.port} תפוס על ידי יישום או התקנה אחרים. סגרו אותם או בחרו --port אחר.')
+        if running.get('maintenance'):
+            raise SystemExit('היישום מתעדכן כעת. פתחו אותו לאחר סיום העדכון.')
+        if args.open:
+            webbrowser.open(url)
+        return
+    with socket.socket() as probe:
+        probe.settimeout(.5)
+        if probe.connect_ex(('127.0.0.1', args.port)) == 0:
+            raise SystemExit(f'הפורט {args.port} תפוס. סגרו את היישום המשתמש בו או בחרו --port אחר.')
     data_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(filename=data_dir / "studio.log", level=logging.INFO,
                         encoding="utf-8", format="%(asctime)s %(levelname)s %(message)s")

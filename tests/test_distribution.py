@@ -166,3 +166,15 @@ def test_preparation_network_and_disk_errors_are_actionable():
     from autocaption.bootstrap import preparation_error
     assert 'אינטרנט' in preparation_error(urllib.error.URLError('offline'))
     assert 'מקום פנוי' in preparation_error(OSError(errno.ENOSPC, 'disk full'))
+
+
+def test_python_launcher_rejects_another_installation(monkeypatch, tmp_path):
+    import sys
+    from autocaption.web import main
+    monkeypatch.setenv('AUTOCAPTION_DATA_DIR', str(tmp_path))
+    monkeypatch.setattr(sys, 'argv', ['autocaption-web', '--open'])
+    monkeypatch.setattr('urllib.request.urlopen', lambda *a, **k: io.BytesIO(
+        b'{"app":"katuv","installation_id":"another-installation"}'))
+    monkeypatch.setattr('webbrowser.open', lambda *a: pytest.fail('Opened a foreign server'))
+    with pytest.raises(SystemExit, match='--port'):
+        main()

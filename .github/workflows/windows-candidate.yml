@@ -6,6 +6,11 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  PYTHONUTF8: '1'
+concurrency:
+  group: windows-candidate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   candidate:
     runs-on: windows-latest
